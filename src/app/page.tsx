@@ -13,6 +13,7 @@ import { useLearningPath } from "@/hooks/use-learning-path";
 import { useSRS } from "@/hooks/use-srs";
 import { useDailyGoal } from "@/hooks/use-daily-goal";
 import { useWordbook } from "@/hooks/use-wordbook";
+import { useGlobalErrors } from "@/hooks/use-global-errors";
 import { registerSW } from "@/app/sw-register";
 
 import { dataRegistry } from "@/data/registry";
@@ -22,7 +23,7 @@ import type { LearningPathResult } from "@/hooks/use-learning-path";
 import type { DayStats } from "@/hooks/use-history-stats";
 import type { WordBookEntry } from "@/hooks/use-wordbook";
 import { cn } from "@/lib/utils";
-import { RotateCcw, SkipForward, Play, Keyboard, Volume2, VolumeX, Eye, EyeOff, ChevronLeft, ChevronRight, Settings, ListCollapse, Lightbulb, BookA, MessageSquare, Sun, Moon, Star } from "lucide-react";
+import { RotateCcw, SkipForward, Play, Keyboard, Volume2, VolumeX, Eye, EyeOff, ChevronLeft, ChevronRight, Settings, ListCollapse, Lightbulb, BookA, MessageSquare, Sun, Moon, Star, PenLine } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OnboardingOverlay, isOnboardingDone } from "@/components/onboarding/onboarding-overlay";
 
@@ -43,6 +44,7 @@ export default function Home() {
   const srs = useSRS();
   const dailyGoal = useDailyGoal();
   const wordbook = useWordbook();
+  const globalErrors = useGlobalErrors();
 
   // Register service worker for PWA
   useEffect(() => { registerSW(); }, []);
@@ -81,6 +83,18 @@ export default function Home() {
   const [srsSessionCorrect, setSrsSessionCorrect] = useState(0);
   const [srsSessionTotal, setSrsSessionTotal] = useState(0);
   const [srsSessionComplete, setSrsSessionComplete] = useState(false);
+  const [goalCelebration, setGoalCelebration] = useState(false);
+
+  // Detect daily goal completion and show celebration
+  const prevAllDoneRef = useRef(dailyGoal.isAllDone);
+  useEffect(() => {
+    if (dailyGoal.isAllDone && !prevAllDoneRef.current) {
+      setGoalCelebration(true);
+      setTimeout(() => setGoalCelebration(false), 3000);
+    }
+    prevAllDoneRef.current = dailyGoal.isAllDone;
+  }, [dailyGoal.isAllDone]);
+  const [isDictationMode, setIsDictationMode] = useState(false);
 
   // Refs
   const stateRef = useRef(state);
@@ -115,6 +129,10 @@ export default function Home() {
   dailyIncrementNewRef.current = dailyGoal.incrementNew;
   const dailyIncrementReviewRef = useRef(dailyGoal.incrementReview);
   dailyIncrementReviewRef.current = dailyGoal.incrementReview;
+  const isDictationModeRef = useRef(isDictationMode);
+  isDictationModeRef.current = isDictationMode;
+  const recordGlobalErrorRef = useRef(globalErrors.recordError);
+  recordGlobalErrorRef.current = globalErrors.recordError;
 
   const currentItem = (isReviewMode ? reviewItems : categoryItems)[state.index] ?? null;
   const currentTarget = currentItem?.en ?? "";
@@ -192,7 +210,7 @@ export default function Home() {
 
   // Auto-speak — immediate: true 确保切换词时打断旧音频
   useEffect(() => {
-    if (!currentTarget || state.isComplete || !soundEnabled) return;
+    if (!currentTarget || state.isComplete || !soundEnabled || isDictationModeRef.current) return;
     const timer = setTimeout(() => speakRef.current(currentTarget, { immediate: true }), INITIAL_SPEAK_DELAY);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,6 +247,12 @@ export default function Home() {
     if (!isReviewModeRef.current && currentItem) {
       const zhSrs = "zh" in currentItem ? currentItem.zh : "";
       srs.addItem(currentTarget, zhSrs, state.category, `${state.category}/${state.chapter}/${state.index}`);
+    }
+
+    // Record global errors (non-review, non-SRS)
+    if (!isReviewModeRef.current && hadErrors && currentItem) {
+      const ipa = "ipa" in currentItem ? currentItem.ipa : "";
+      recordGlobalErrorRef.current(currentTarget, currentItem.zh, ipa, state.category);
     }
 
     // Daily goal tracking
@@ -313,7 +337,7 @@ export default function Home() {
 
     if (thisCharCorrect) {
       handleCharInputRef.current(char);
-      if (soundEnabledRef.current && char !== " ") speakRef.current(prefix);
+      if (soundEnabledRef.current && char !== " " && !isDictationModeRef.current) speakRef.current(prefix);
       // Only complete when ALL letters typed AND all correct
       if (newLen >= s.target.length) {
         const allCorrect = s.input.every(c => c.correct);
@@ -331,7 +355,7 @@ export default function Home() {
     // --- Wrong character ---
     // Show red + shake, DON'T complete — force user to backspace
     handleCharInputRef.current(char);
-    if (soundEnabledRef.current) speakRef.current(prefix);
+    if (soundEnabledRef.current && !isDictationModeRef.current) speakRef.current(prefix);
     setErrorFlash("shake");
     setTimeout(() => setErrorFlash("none"), 350);
 
@@ -572,6 +596,21 @@ export default function Home() {
     else onChar(key);
   }, [onBackspace, onSpace, onChar]);
   const handleSoundToggle = useCallback(() => setSoundEnabled((p) => !p), []);
+  const handleDictationModeToggle = useCallback(() => setIsDictationMode((p) => !p), []);
+  const handleGlobalErrorReview = useCallback(() => {
+    if (globalErrors.errorItems.length === 0) return;
+    const items = globalErrors.errorItems.map((entry) => ({
+      en: entry.en,
+      zh: entry.zh,
+      ipa: entry.ipa,
+      ib: [] as number[],
+    }));
+    setIsReviewMode(true);
+    setIsSRSReview(false);
+    setReviewItems(items);
+    loadItem(0, items[0].en);
+    cancel();
+  }, [globalErrors.errorItems, loadItem, cancel]);
   const handleReveal = useCallback(() => {
     const s = stateRef.current;
     if (s.isComplete || s.revealedCount >= 2) return;
@@ -632,6 +671,8 @@ export default function Home() {
         dailyGoal={dailyGoal}
         wordbookCount={wordbook.count}
         onWordbookReview={handleWordbookReview}
+        globalErrorCount={globalErrors.errorCount}
+        onGlobalErrorReview={handleGlobalErrorReview}
       />
 
       <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden">
@@ -714,6 +755,11 @@ export default function Home() {
               {showHint ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
 
+            {/* Dictation mode toggle */}
+            <button onClick={handleDictationModeToggle} className={cn("p-1.5 rounded-md transition-all active:scale-95", isDictationMode ? "text-[var(--color-action-blue)]" : "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5")} title={isDictationMode ? "退出听写模式" : "听写模式：只看中文，默写英文"}>
+              <PenLine className="w-3.5 h-3.5" />
+            </button>
+
             {/* Keyboard */}
             <button onClick={() => setShowKeyboard((p) => !p)} className={cn("p-1.5 rounded-md transition-all active:scale-95", showKeyboard ? "text-[var(--color-action-blue)]" : "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5")}>
               <Keyboard className="w-3.5 h-3.5" />
@@ -771,6 +817,18 @@ export default function Home() {
         {totalCount > 0 && (
           <div className="absolute top-12 left-0 right-0 h-[3px] bg-zinc-200/50 dark:bg-zinc-800/50 z-10">
             <div className="h-full bg-[var(--color-action-blue)] transition-all duration-500 ease-out rounded-r-full" style={{ width: `${totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%` }} />
+          </div>
+        )}
+
+        {/* Daily goal celebration toast */}
+        {goalCelebration && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 animate-in fade-in slide-in-from-top-2 duration-300 pointer-events-none">
+            <div className="px-5 py-2.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-semibold shadow-lg flex items-center gap-2">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              今日目标完成！已连续学习 {streak.currentStreak} 天 🔥
+            </div>
           </div>
         )}
 
@@ -842,6 +900,14 @@ export default function Home() {
               </div>
             )}
 
+            {/* Dictation mode indicator */}
+            {isDictationMode && !state.isComplete && (
+              <div className="mb-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-semibold tracking-wide border border-amber-200/50 dark:border-amber-700/30">
+                <PenLine className="w-3 h-3" />
+                听写模式 · 根据中文默写英文
+              </div>
+            )}
+
             {/* Initial typing hint (above typing area) */}
             {!state.isComplete && state.input.length === 0 && (
               <div className="mb-6 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -850,10 +916,10 @@ export default function Home() {
                     <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
                     <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h.01M10 16h.01M14 16h.01"/>
                   </svg>
-                  按下键盘开始打字
+                  {isDictationMode ? "输入单词的英文拼写" : "按下键盘开始打字"}
                 </div>
                 <span className="text-xs text-zinc-300 dark:text-zinc-600 font-medium">
-                  每敲一个字母都会听到发音
+                  {isDictationMode ? "完成后会显示正确答案" : "每敲一个字母都会听到发音"}
                 </span>
               </div>
             )}
@@ -866,6 +932,7 @@ export default function Home() {
               revealedLetters={state.revealedLetters}
               errorFlash={errorFlash}
               onEmojiClick={() => speak(currentTarget)}
+              dictationMode={isDictationMode}
             />
 
             {/* IPA / Translation */}
@@ -1018,7 +1085,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Chapter Complete overlay — progressive disclosure */}
+        {/* Chapter Complete overlay — simplified primary + foldable extras */}
         {isChapterComplete && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-sm">
             <div className="bg-white dark:bg-zinc-900 rounded-2xl px-10 py-10 text-center max-w-sm animate-in fade-in zoom-in-95 duration-300">
@@ -1037,7 +1104,7 @@ export default function Home() {
                 {chapters.find((c) => c.chapter === state.chapter)?.title}
               </p>
 
-              {/* PRIMARY ACTION: continue to next chapter */}
+              {/* PRIMARY ACTION only */}
               {(() => {
                 const isLastChapter = chapters.findIndex((c) => c.chapter === state.chapter) >= chapters.length - 1;
                 const nextPack = isLastChapter ? lp.nextPack : null;
@@ -1073,51 +1140,22 @@ export default function Home() {
                 // All packs complete
                 return (
                   <div className="flex flex-col items-center gap-2">
-                    <span className="text-lg leading-none animate-in zoom-in duration-500 delay-300">
-                      🎉
-                    </span>
-                    <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">
-                      已学完所有词包！
-                    </p>
+                    <span className="text-lg leading-none animate-in zoom-in duration-500 delay-300">🎉</span>
+                    <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">已学完所有词包！</p>
                   </div>
                 );
               })()}
 
-              {/* SECONDARY: error review + full review (smaller, when errors exist) */}
-              {state.wrongIndices.length > 0 && (
-                <div className="mt-4 flex flex-col gap-2">
-                  <button
-                    onClick={handleReviewWrongWords}
-                    className="w-full px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-semibold rounded-full hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-1.5"
-                  >
-                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                    复习错词 ({state.wrongIndices.length})
-                  </button>
-                  <button
-                    onClick={handleReviewAll}
-                    className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-semibold rounded-full hover:brightness-110 transition-all active:scale-95"
-                  >
-                    复习全章（打乱顺序）
-                  </button>
-                </div>
-              )}
-
-              {/* TERTIARY: thin-text actions */}
-              <div className="mt-6 pt-4 border-t border-zinc-200/30 dark:border-zinc-800/30 flex items-center justify-center gap-3">
-                <button onClick={handleReset} className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-                  重新练习
-                </button>
-                <span className="text-zinc-200 dark:text-zinc-700 text-xs">·</span>
-                <button onClick={handleShare} className="flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                  </svg>
-                  分享
-                </button>
+              {/* Foldable more actions */}
+              <div className="mt-6 pt-4 border-t border-zinc-200/30 dark:border-zinc-800/30">
+                <MoreActionsButton
+                  hasErrors={state.wrongIndices.length > 0}
+                  errorCount={state.wrongIndices.length}
+                  onReviewWrong={handleReviewWrongWords}
+                  onReviewAll={handleReviewAll}
+                  onReset={handleReset}
+                  onShare={handleShare}
+                />
               </div>
             </div>
           </div>
@@ -1157,17 +1195,16 @@ export default function Home() {
           isChapterComplete || !showBottomStats ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100"
         )}>
           <div className="flex items-center justify-center gap-8 bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-t border-zinc-200/40 dark:border-zinc-800/40 px-4 py-3">
-            <StatItem value={formatTime(elapsedSeconds)} label="time" />
-            <StatItem value={elapsedSeconds > 0 ? String(Math.round(state.stats.correct / (elapsedSeconds / 60) / 5)) : "0"} label="wpm" />
-            <StatItem value={state.stats.letters > 0 ? `${Math.round((state.stats.correct / state.stats.letters) * 100)}` : "0"} label="acc" />
-            <StatItem value={String(state.completedIndices.length)} label="完成" />
-            <StatItem value={String(state.wrongIndices.length)} label="当前错误" />
+            <StatItem value={formatTime(elapsedSeconds)} label="耗时" />
+            <StatItem value={`${completedCount}/${totalCount}`} label="本章进度" />
+            <StatItem value={String(wordbook.count)} label="已收藏" />
+            <StatItem value={`${dailyGoal.goal.todayNewCount}/${dailyGoal.goal.newWordsPerDay}`} label="今日新词" />
             {streak.currentStreak > 0 && (
               <div className="flex flex-col items-center gap-0">
                 <span className="text-base font-semibold tracking-tight text-amber-500 tabular-nums">
                   🔥 {streak.currentStreak}
                 </span>
-                <span className="text-[9px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">天数</span>
+                <span className="text-[9px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">连续</span>
               </div>
             )}
           </div>
@@ -1210,8 +1247,8 @@ export default function Home() {
 
 // -- Apple-style components --
 
-function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, onShowStats, streak, currentCategory, onCategoryChange, learningPath, srsDueCount, onSRSReview, dailyGoal, wordbookCount, onWordbookReview }: {
-  collapsed: boolean; currentMode: LearningMode; onModeChange: (m: LearningMode) => void; onToggleCollapse: () => void; onShowStats: () => void; streak: { currentStreak: number; longestStreak: number }; currentCategory: string; onCategoryChange: (catId: string) => void; learningPath: LearningPathResult; srsDueCount: number; onSRSReview: () => void; dailyGoal: ReturnType<typeof useDailyGoal>; wordbookCount: number; onWordbookReview: () => void;
+function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, onShowStats, streak, currentCategory, onCategoryChange, learningPath, srsDueCount, onSRSReview, dailyGoal, wordbookCount, onWordbookReview, globalErrorCount, onGlobalErrorReview }: {
+  collapsed: boolean; currentMode: LearningMode; onModeChange: (m: LearningMode) => void; onToggleCollapse: () => void; onShowStats: () => void; streak: { currentStreak: number; longestStreak: number }; currentCategory: string; onCategoryChange: (catId: string) => void; learningPath: LearningPathResult; srsDueCount: number; onSRSReview: () => void; dailyGoal: ReturnType<typeof useDailyGoal>; wordbookCount: number; onWordbookReview: () => void; globalErrorCount: number; onGlobalErrorReview: () => void;
 }) {
   const { isDark, toggle: toggleTheme } = useTheme();
   const ModeIcon = modeIcons[currentMode];
@@ -1433,6 +1470,30 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         </div>
       )}
 
+      {/* Global Errors */}
+      {!collapsed && (
+        <div className="shrink-0 px-2.5 pt-1">
+          <button
+            onClick={onGlobalErrorReview}
+            disabled={globalErrorCount === 0}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all active:scale-[0.98] text-zinc-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span>常错词</span>
+            </span>
+            {globalErrorCount > 0 && (
+              <span className="bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                {globalErrorCount > 99 ? "99+" : globalErrorCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Streak */}
       {!collapsed && streak.currentStreak > 0 && (
         <div className="shrink-0 px-4 py-2 border-t border-zinc-200/30 dark:border-zinc-800/30">
@@ -1511,6 +1572,53 @@ function ShortcutHint({ keys, label }: { keys: string[]; label: string }) {
       ))}
       <span className="ml-0.5">{label}</span>
     </span>
+  );
+}
+
+// -- More Actions (foldable) --
+function MoreActionsButton({ hasErrors, errorCount, onReviewWrong, onReviewAll, onReset, onShare }: {
+  hasErrors: boolean; errorCount: number; onReviewWrong: () => void; onReviewAll: () => void; onReset: () => void; onShare: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col items-center">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+      >
+        <svg className={cn("w-3 h-3 transition-transform duration-200", open && "rotate-180")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+        更多操作
+      </button>
+      {open && (
+        <div className="mt-3 flex flex-col gap-1.5 w-full animate-in fade-in slide-in-from-top-2 duration-200">
+          {hasErrors && (
+            <button onClick={onReviewWrong} className="w-full px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[11px] font-semibold rounded-full hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-1">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              复习错词 ({errorCount})
+            </button>
+          )}
+          <button onClick={onReviewAll} className="w-full px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold rounded-full hover:brightness-110 transition-all active:scale-95">
+            复习全章（打乱顺序）
+          </button>
+          <div className="flex items-center justify-center gap-4 pt-1">
+            <button onClick={onReset} className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">重新练习</button>
+            <span className="text-zinc-200 dark:text-zinc-700 text-[11px]">·</span>
+            <button onClick={onShare} className="flex items-center gap-1 text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+              分享
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
