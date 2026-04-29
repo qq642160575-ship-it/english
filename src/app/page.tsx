@@ -76,6 +76,11 @@ export default function Home() {
   const [errorFlash, setErrorFlash] = useState<"none" | "shake" | "shakeAll">("none");
   const [showIpa, setShowIpa] = useState(false);
   const [milestone, setMilestone] = useState<string | null>(null);
+  const [showBottomStats, setShowBottomStats] = useState(true);
+  const [completedWordFeedback, setCompletedWordFeedback] = useState<{ en: string; zh: string; isSrs?: boolean } | null>(null);
+  const [srsSessionCorrect, setSrsSessionCorrect] = useState(0);
+  const [srsSessionTotal, setSrsSessionTotal] = useState(0);
+  const [srsSessionComplete, setSrsSessionComplete] = useState(false);
 
   // Refs
   const stateRef = useRef(state);
@@ -92,11 +97,15 @@ export default function Home() {
   handleBackspaceRef.current = handleBackspace;
   const soundEnabledRef = useRef(soundEnabled);
   soundEnabledRef.current = soundEnabled;
+  const statsIdleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetStatsIdleRef = useRef<() => void>(() => {});
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reviewItemsRef = useRef(reviewItems);
   reviewItemsRef.current = reviewItems;
   const isReviewModeRef = useRef(isReviewMode);
   isReviewModeRef.current = isReviewMode;
+  const advanceRef = useRef<() => void>(() => {});
   const isSRSReviewRef = useRef(isSRSReview);
   isSRSReviewRef.current = isSRSReview;
   const srsReviewIdsRef = useRef<{ id: string; en: string }[]>([]);
@@ -147,8 +156,31 @@ export default function Home() {
   // Initialize
   useEffect(() => {
     dataRegistry.init();
-    const items = loadChapterItems(state.category, state.chapter);
-    const saved = load(state.mode, state.category, state.chapter);
+    const cat = state.category;
+    const ch = state.chapter;
+    const mode = state.mode;
+    let items = loadChapterItems(cat, ch);
+
+    // If current category has no items, fall back to first available pack
+    if (items.length === 0) {
+      const available = dataRegistry.getAvailablePacks(mode);
+      if (available.length > 0) {
+        const firstPack = available[0].id;
+        setCategory(firstPack);
+        const firstCh = dataRegistry.getDefaultChapter(firstPack);
+        items = loadChapterItems(firstPack, firstCh);
+        const saved = load(mode, firstPack, firstCh);
+        if (saved && items[saved.index]) {
+          restoreIndices(saved.index, saved.completedIndices);
+          loadItem(saved.index, items[saved.index].en);
+        } else if (items[0]) {
+          loadItem(0, items[0].en);
+        }
+        return;
+      }
+    }
+
+    const saved = load(mode, cat, ch);
     if (saved && items[saved.index]) {
       restoreIndices(saved.index, saved.completedIndices);
       loadItem(saved.index, items[saved.index].en);
@@ -174,6 +206,16 @@ export default function Home() {
     recordCompletion(hadErrors);
     if (!isReviewModeRef.current) markActive();
 
+    // Show completion feedback
+    if (isSRSReviewRef.current) {
+      setCompletedWordFeedback({ en: currentTarget, zh: "", isSrs: true });
+      setSrsSessionCorrect((c) => c + 1);
+    } else {
+      const zh = currentItem && "zh" in currentItem ? (currentItem as WordItem).zh : "";
+      setCompletedWordFeedback({ en: currentTarget, zh });
+    }
+    setTimeout(() => setCompletedWordFeedback(null), 1500);
+
     // Milestone check (non-review mode only)
     if (!isReviewModeRef.current) {
       const done = state.completedIndices.length;
@@ -185,8 +227,8 @@ export default function Home() {
 
     // Add to SRS
     if (!isReviewModeRef.current && currentItem) {
-      const zh = "zh" in currentItem ? currentItem.zh : "";
-      srs.addItem(currentTarget, zh, state.category, `${state.category}/${state.chapter}/${state.index}`);
+      const zhSrs = "zh" in currentItem ? currentItem.zh : "";
+      srs.addItem(currentTarget, zhSrs, state.category, `${state.category}/${state.chapter}/${state.index}`);
     }
 
     // Daily goal tracking
@@ -199,7 +241,9 @@ export default function Home() {
 
     if (soundEnabled) speakRef.current(currentTarget, { rate: COMPLETE_RATE, immediate: true });
     save(stateRef.current);
-    const timer = setTimeout(() => {
+
+    // Store advance logic so Space/Enter can trigger it immediately
+    advanceRef.current = () => {
       const s = stateRef.current;
       const items = isReviewModeRef.current ? reviewItemsRef.current : itemsRef.current;
 
@@ -215,21 +259,47 @@ export default function Home() {
       if (nextIndex < items.length) {
         loadItem(nextIndex, items[nextIndex].en);
       } else if (isReviewModeRef.current) {
-        // Review complete — return to normal mode
-        setIsReviewMode(false);
-        setIsSRSReview(false);
-        setReviewItems([]);
-        clearWrong();
+        if (isSRSReviewRef.current) {
+          // SRS review complete — show summary
+          setIsReviewMode(false);
+          setIsSRSReview(false);
+          setReviewItems([]);
+          setSrsSessionComplete(true);
+          clearWrong();
+        } else {
+          // Manual review complete — return to normal mode
+          setIsReviewMode(false);
+          setReviewItems([]);
+          clearWrong();
+        }
         const origItems = loadChapterItems(s.category, s.chapter);
         if (origItems.length > 0) loadItem(0, origItems[0].en);
       }
+    };
+
+    const timer = setTimeout(() => {
+      advanceTimerRef.current = null;
+      advanceRef.current();
     }, AUTO_ADVANCE_DELAY);
-    return () => clearTimeout(timer);
+    advanceTimerRef.current = timer;
+    return () => {
+      clearTimeout(timer);
+      if (advanceTimerRef.current === timer) advanceTimerRef.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.isComplete, currentTarget, soundEnabled, save, clearWrong, recordCompletion, markActive]);
 
+  // Stats bar auto-hide: show on input, hide after 3s idle
+  const resetStatsIdle = useCallback(() => {
+    setShowBottomStats(true);
+    if (statsIdleRef.current) clearTimeout(statsIdleRef.current);
+    statsIdleRef.current = setTimeout(() => setShowBottomStats(false), 3000);
+  }, []);
+  resetStatsIdleRef.current = resetStatsIdle;
+
   // Keyboard handlers
   const onChar = useCallback((char: string) => {
+    resetStatsIdleRef.current();
     const s = stateRef.current;
     if (s.isComplete || s.input.length >= s.target.length) return;
     const newLen = s.input.length + 1;
@@ -280,7 +350,17 @@ export default function Home() {
 
   const onSpace = useCallback(() => {
     const s = stateRef.current;
-    if (s.isComplete || s.input.length >= s.target.length) return;
+    if (s.isComplete) {
+      // Immediately advance to next word
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = null;
+      }
+      advanceRef.current();
+      return;
+    }
+    resetStatsIdleRef.current();
+    if (s.input.length >= s.target.length) return;
     const newLen = s.input.length + 1;
     const prefix = s.target.slice(0, newLen);
     handleCharInputRef.current(" ");
@@ -290,6 +370,7 @@ export default function Home() {
   }, []);
 
   const onBackspace = useCallback(() => {
+    resetStatsIdleRef.current();
     const s = stateRef.current;
     // Check if last character was an error — positive feedback on correction
     const lastChar = s.input[s.input.length - 1];
@@ -306,8 +387,16 @@ export default function Home() {
 
   const onEnter = useCallback(() => {
     const s = stateRef.current;
+    if (s.isComplete) {
+      // Immediately advance to next word
+      if (advanceTimerRef.current) {
+        clearTimeout(advanceTimerRef.current);
+        advanceTimerRef.current = null;
+      }
+      advanceRef.current();
+      return;
+    }
     const items = itemsRef.current;
-    if (s.isComplete) return;
     cancel();
     const nextIndex = s.index + 1;
     if (nextIndex < items.length) skipItem(nextIndex, items[nextIndex].en);
@@ -416,6 +505,9 @@ export default function Home() {
       ipa: "",
       ib: [],
     }));
+    setSrsSessionCorrect(0);
+    setSrsSessionTotal(items.length);
+    setSrsSessionComplete(false);
     setIsReviewMode(true);
     setIsSRSReview(true);
     setReviewItems(items);
@@ -548,6 +640,18 @@ export default function Home() {
 
         {/* Top frosted nav bar */}
         <nav className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between h-12 px-5 bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-b border-zinc-200/40 dark:border-zinc-800/40">
+          {/* SRS review mode indicator */}
+          {isSRSReview && (
+            <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-center h-full pointer-events-none">
+              <span className="px-3 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold tracking-wide flex items-center gap-1">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                复习模式
+                <span className="opacity-60">{srsSessionCorrect}/{srsSessionTotal}</span>
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400 tracking-tight">
             {/* Category selector */}
             {categories.length > 1 && (
@@ -605,21 +709,6 @@ export default function Home() {
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Speech rate — compact cycle button */}
-            <button
-              onClick={() => {
-                const rates = [0.5, 0.6, 0.8, 1.0, 1.2];
-                const idx = rates.indexOf(speechRate);
-                const nextRate = rates[(idx + 1) % rates.length];
-                setSpeechRate(nextRate);
-                try { localStorage.setItem(SPEECH_RATE_KEY, String(nextRate)); } catch {}
-              }}
-              className="text-[10px] w-7 h-7 rounded-md bg-transparent text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 cursor-pointer outline-none transition-all flex items-center justify-center font-medium"
-              title={`语速: ${speechRate}x`}
-            >
-              {speechRate}x
-            </button>
-
             {/* Hint (show/hide untyped letters) */}
             <button onClick={() => setShowHint((p) => !p)} className={cn("p-1.5 rounded-md transition-all active:scale-95", showHint ? "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200" : "text-[var(--color-action-blue)]")} title={showHint ? "隐藏未输入字母 (Ctrl+Shift+V)" : "显示未输入字母 (Ctrl+Shift+V)"}>
               {showHint ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -662,15 +751,18 @@ export default function Home() {
               </>
             )}
 
-            {/* Speak */}
-            <button onClick={() => speak(currentTarget)} className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95">
-              <Play className="w-3 h-3" />
-              朗读
-            </button>
-
             {/* Settings */}
             <button onClick={() => setShowDataManager(true)} className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95">
               <Settings className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Reset (compact, secondary) */}
+            <button
+              onClick={handleReset}
+              className="p-1.5 rounded-md text-zinc-300 hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95"
+              title="重置本章进度 (Esc)"
+            >
+              <RotateCcw className="w-3 h-3" />
             </button>
           </div>
         </nav>
@@ -726,6 +818,46 @@ export default function Home() {
                 {milestone}
               </div>
             )}
+
+            {/* Completed word feedback "✓ en = zh" (or SRS "✓ 已掌握！") */}
+            {completedWordFeedback && (
+              <div className={cn(
+                "mb-5 px-5 py-2 rounded-full shadow-sm border animate-in fade-in zoom-in-105 duration-300 flex items-center gap-1.5",
+                completedWordFeedback.isSrs
+                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-700/30"
+                  : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200/50 dark:border-green-700/30"
+              )}>
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                {completedWordFeedback.isSrs ? (
+                  <span>{completedWordFeedback.en} ✓ 已掌握！</span>
+                ) : (
+                  <>
+                    <span>{completedWordFeedback.en}</span>
+                    <span className="text-green-400 dark:text-green-500/60">=</span>
+                    <span>{completedWordFeedback.zh || "—"}</span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Initial typing hint (above typing area) */}
+            {!state.isComplete && state.input.length === 0 && (
+              <div className="mb-6 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 text-sm font-semibold tracking-wide">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+                    <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h.01M10 16h.01M14 16h.01"/>
+                  </svg>
+                  按下键盘开始打字
+                </div>
+                <span className="text-xs text-zinc-300 dark:text-zinc-600 font-medium">
+                  每敲一个字母都会听到发音
+                </span>
+              </div>
+            )}
+
             <TypingArea
               target={currentTarget}
               input={state.input}
@@ -733,15 +865,16 @@ export default function Home() {
               showHint={showHint}
               revealedLetters={state.revealedLetters}
               errorFlash={errorFlash}
+              onEmojiClick={() => speak(currentTarget)}
             />
 
             {/* IPA / Translation */}
-            <div className="mt-8 text-lg md:text-2xl font-[var(--font-display)] font-medium tracking-tight transition-opacity h-8 flex items-center justify-center gap-2">
+            <div className="mt-4 text-xl md:text-2xl font-[var(--font-display)] font-medium tracking-tight transition-opacity h-8 flex items-center justify-center gap-2">
               {state.isComplete ? (
                 <span className="text-[var(--color-success)]/70 font-mono text-base">/{fullIpa}/</span>
               ) : (
                 <>
-                  <span className="text-zinc-400 dark:text-zinc-500 text-sm font-sans">{currentItem.zh || fullIpa}</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 text-base font-sans">{currentItem.zh || fullIpa}</span>
                   <button
                     onClick={() => setShowIpa(!showIpa)}
                     className={cn(
@@ -798,46 +931,33 @@ export default function Home() {
               </div>
             )}
 
-            {/* Initial typing hint */}
-            {!state.isComplete && state.input.length === 0 && (
-              <div className="mt-10 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 text-sm font-semibold tracking-wide">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
-                    <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h.01M10 16h.01M14 16h.01"/>
-                  </svg>
-                  按下键盘开始打字
-                </div>
-                <span className="text-xs text-zinc-300 dark:text-zinc-600 font-medium">
-                  每敲一个字母都会听到发音
-                </span>
+            {/* Error auto-prompt */}
+            {!state.isComplete && state.wordErrorCount >= 3 && !stuckGuidance && (
+              <div className="mt-3 text-xs text-amber-500 dark:text-amber-400 font-medium animate-in fade-in duration-300 flex items-center gap-1.5">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                卡住了？按 <kbd className="px-1 py-[1px] text-[10px] leading-none rounded-[3px] bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 font-mono border border-amber-300/50 dark:border-amber-700/50">Enter</kbd> 跳过这个词
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="mt-12 flex items-center gap-2.5">
-              <AppleActionButton onClick={handleReset} variant="secondary">
-                <RotateCcw className="w-3.5 h-3.5" />
-                重置本章
-                <kbd className="ml-0.5 px-1 py-[1px] text-[9px] leading-none rounded-[3px] bg-zinc-900/5 dark:bg-zinc-100/10 text-zinc-400 dark:text-zinc-500 font-mono">Esc</kbd>
-              </AppleActionButton>
-              <AppleActionButton onClick={handleListen} variant="secondary">
-                <Play className="w-3.5 h-3.5" />
-                听发音
-                <kbd className="ml-0.5 px-1 py-[1px] text-[9px] leading-none rounded-[3px] bg-zinc-900/5 dark:bg-zinc-100/10 text-zinc-400 dark:text-zinc-500 font-mono">⌃⇧P</kbd>
-              </AppleActionButton>
-              <AppleActionButton onClick={handleReveal} variant="secondary" disabled={state.isComplete || state.revealedCount >= 2}>
-                <Lightbulb className="w-3.5 h-3.5" />
-                提示 {2 - state.revealedCount}/2
-              </AppleActionButton>
-              {state.index < chapterItems.length - 1 && (
-                <AppleActionButton onClick={handleSkip} variant="primary" disabled={state.isComplete}>
-                  <SkipForward className="w-3.5 h-3.5" />
-                  跳过
-                  <kbd className="ml-0.5 px-1 py-[1px] text-[9px] leading-none rounded-[3px] bg-white/15 dark:bg-black/15 text-zinc-300 dark:text-zinc-600 font-mono">⌃⇧K</kbd>
+            {!state.isComplete && (
+              <div className="mt-10 flex items-center gap-3">
+                <AppleActionButton onClick={handleListen} variant="secondary">
+                  <Play className="w-3.5 h-3.5" />
+                  听发音
                 </AppleActionButton>
-              )}
-            </div>
+                <AppleActionButton onClick={handleReveal} variant="secondary" disabled={state.revealedCount >= 2}>
+                  <Lightbulb className="w-3.5 h-3.5" />
+                  提示 {2 - state.revealedCount}
+                </AppleActionButton>
+                <AppleActionButton onClick={handleSkip} variant="primary" disabled={false}>
+                  跳过
+                  <SkipForward className="w-3.5 h-3.5" />
+                </AppleActionButton>
+              </div>
+            )}
 
             {/* Virtual Keyboard */}
             {showKeyboard && (
@@ -1003,10 +1123,38 @@ export default function Home() {
           </div>
         )}
 
+        {/* SRS Review Complete summary */}
+        {srsSessionComplete && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-sm">
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl px-10 py-10 text-center max-w-sm animate-in fade-in zoom-in-95 duration-300">
+              <div className="text-center mb-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-500 dark:text-emerald-400 animate-in zoom-in duration-500 delay-200">
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-xl font-[var(--font-display)] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-1">
+                复习完成
+              </h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+                本次复习 <span className="font-semibold text-emerald-500">{srsSessionCorrect}</span> / <span className="font-semibold">{srsSessionTotal}</span> 个词已掌握 ✓
+              </p>
+              <button
+                onClick={() => setSrsSessionComplete(false)}
+                className="w-full py-3 bg-[var(--color-action-blue)] text-white text-sm font-semibold rounded-full hover:brightness-110 transition-all active:scale-95"
+              >
+                继续学习
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stats bar (bottom frosted) */}
         <div className={cn(
-          "absolute bottom-0 left-0 right-0 z-10 transition-all duration-300",
-          isChapterComplete ? "opacity-0 translate-y-4" : "opacity-100"
+          "absolute bottom-0 left-0 right-0 z-10 transition-all duration-500",
+          isChapterComplete || !showBottomStats ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100"
         )}>
           <div className="flex items-center justify-center gap-8 bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-t border-zinc-200/40 dark:border-zinc-800/40 px-4 py-3">
             <StatItem value={formatTime(elapsedSeconds)} label="time" />
@@ -1033,6 +1181,8 @@ export default function Home() {
           <div className="flex items-center gap-2 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-zinc-200/30 dark:border-zinc-800/30">
             <span className="text-[9px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">快捷键</span>
             <ShortcutHint keys={["Esc"]} label="重置本章" />
+            <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
+            <ShortcutHint keys={["Space"]} label="加速" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
             <ShortcutHint keys={["⌃", "⇧", "P"]} label="发音" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
