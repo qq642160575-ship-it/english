@@ -177,9 +177,9 @@ export default function Home() {
     // Milestone check (non-review mode only)
     if (!isReviewModeRef.current) {
       const done = state.completedIndices.length;
-      if ([5, 10, 15, 25, 50, 100].includes(done)) {
-        setMilestone(`已连续完成 ${done} 个词 ✦`);
-        setTimeout(() => setMilestone(null), 2500);
+      if ([5, 10, 15, 25, 50, 100].includes(done) && done > 0) {
+        setMilestone(`🎉 已完成 ${done} 个词！`);
+        setTimeout(() => setMilestone(null), 4000);
       }
     }
 
@@ -269,12 +269,12 @@ export default function Home() {
       // Reached end with error — flash all red and show guidance
       setTimeout(() => {
         setErrorFlash("shakeAll");
-        setStuckGuidance("字母打错了，按 Backspace 退格键修正");
+        setStuckGuidance("按 Backspace 修正，或按 Ctrl+Shift+K 跳过");
       }, 400);
       setTimeout(() => {
         setErrorFlash("none");
         setStuckGuidance(null);
-      }, 2500);
+      }, 5000);
     }
   }, []);
 
@@ -583,28 +583,45 @@ export default function Home() {
           <div className="flex items-center gap-1">
             <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
+            {/* SRS review badge (main area, not sidebar-dependent) */}
+            {srs.dueCount > 0 && (
+              <button
+                onClick={handleSRSReview}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all active:scale-95"
+              >
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+                </svg>
+                复习
+                <span className="bg-amber-500 text-white text-[9px] font-bold px-1 py-[1px] rounded-full min-w-[16px] text-center leading-tight">
+                  {srs.dueCount > 99 ? "99+" : srs.dueCount}
+                </span>
+              </button>
+            )}
+
             {/* Sound */}
             <button onClick={handleSoundToggle} className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95">
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Speech rate */}
-            <select
-              value={speechRate}
-              onChange={(e) => { const r = parseFloat(e.target.value); setSpeechRate(r); try { localStorage.setItem(SPEECH_RATE_KEY, String(r)); } catch {} }}
-              className="text-[10px] px-1.5 py-1 rounded-md bg-transparent text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 cursor-pointer outline-none transition-all"
-              aria-label="语速"
-              onClick={(e) => e.stopPropagation()}
+            {/* Speech rate — compact cycle button */}
+            <button
+              onClick={() => {
+                const rates = [0.5, 0.6, 0.8, 1.0, 1.2];
+                const idx = rates.indexOf(speechRate);
+                const nextRate = rates[(idx + 1) % rates.length];
+                setSpeechRate(nextRate);
+                try { localStorage.setItem(SPEECH_RATE_KEY, String(nextRate)); } catch {}
+              }}
+              className="text-[10px] w-7 h-7 rounded-md bg-transparent text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 border border-transparent hover:border-zinc-200 dark:hover:border-zinc-700 cursor-pointer outline-none transition-all flex items-center justify-center font-medium"
+              title={`语速: ${speechRate}x`}
             >
-              <option value={0.5}>0.5x</option>
-              <option value={0.6}>0.6x</option>
-              <option value={0.8}>0.8x</option>
-              <option value={1.0}>1.0x</option>
-              <option value={1.2}>1.2x</option>
-            </select>
+              {speechRate}x
+            </button>
 
-            {/* Hint */}
-            <button onClick={() => setShowHint((p) => !p)} className={cn("p-1.5 rounded-md transition-all active:scale-95", showHint ? "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200" : "text-[var(--color-action-blue)]")}>
+            {/* Hint (show/hide untyped letters) */}
+            <button onClick={() => setShowHint((p) => !p)} className={cn("p-1.5 rounded-md transition-all active:scale-95", showHint ? "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200" : "text-[var(--color-action-blue)]")} title={showHint ? "隐藏未输入字母 (Ctrl+Shift+V)" : "显示未输入字母 (Ctrl+Shift+V)"}>
               {showHint ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
 
@@ -660,8 +677,8 @@ export default function Home() {
 
         {/* Progress line */}
         {totalCount > 0 && (
-          <div className="absolute top-12 left-0 right-0 h-[1px] bg-zinc-200/50 dark:bg-zinc-800/50 z-10">
-            <div className="h-full bg-[var(--color-action-blue)] transition-all duration-500 ease-out" style={{ width: `${totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%` }} />
+          <div className="absolute top-12 left-0 right-0 h-[3px] bg-zinc-200/50 dark:bg-zinc-800/50 z-10">
+            <div className="h-full bg-[var(--color-action-blue)] transition-all duration-500 ease-out rounded-r-full" style={{ width: `${totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%` }} />
           </div>
         )}
 
@@ -671,14 +688,14 @@ export default function Home() {
             {state.index > 0 && categoryItems[state.index - 1] && (
               <div className="absolute top-[60px] left-5 z-10 max-w-[30vw] truncate">
                 <span className="text-xs font-medium tracking-tight text-zinc-300 dark:text-zinc-700">
-                  {showHint ? categoryItems[state.index - 1].en : categoryItems[state.index - 1].en.replace(/[^\s]/g, "_")}
+                  {showHint ? categoryItems[state.index - 1].en : categoryItems[state.index - 1].en.split("").map((c) => c === " " ? "·" : "_").join("")}
                 </span>
               </div>
             )}
             {state.index < categoryItems.length - 1 && categoryItems[state.index + 1] && (
               <div className="absolute top-[60px] right-5 z-10 max-w-[30vw] truncate">
                 <span className="text-xs font-medium tracking-tight text-zinc-300 dark:text-zinc-700">
-                  {showHint ? categoryItems[state.index + 1].en : categoryItems[state.index + 1].en.replace(/[^\s]/g, "_")}
+                  {showHint ? categoryItems[state.index + 1].en : categoryItems[state.index + 1].en.split("").map((c) => c === " " ? "·" : "_").join("")}
                 </span>
               </div>
             )}
@@ -703,9 +720,9 @@ export default function Home() {
                 {stuckGuidance}
               </div>
             )}
-            {/* Milestone toast */}
+            {/* Milestone badge */}
             {milestone && (
-              <div className="mb-4 px-4 py-1.5 rounded-full bg-zinc-900/80 dark:bg-zinc-100/80 text-white dark:text-zinc-900 text-xs font-semibold animate-in fade-in zoom-in duration-200">
+              <div className="mb-5 px-6 py-2.5 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm text-zinc-800 dark:text-zinc-200 text-sm font-semibold shadow-lg border border-zinc-200/50 dark:border-zinc-700/50 animate-in fade-in zoom-in-105 duration-300">
                 {milestone}
               </div>
             )}
@@ -752,10 +769,32 @@ export default function Home() {
                 <button
                   onClick={handleBookmarkToggle}
                   className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 px-2 py-1 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                  title={wordbook.isBookmarked(currentTarget) ? '从生词本移除' : '添加到生词本'}
                 >
                   <Star className={cn("w-3.5 h-3.5 transition-all", wordbook.isBookmarked(currentTarget) && "fill-amber-500 text-amber-500")} />
                   <span>{wordbook.isBookmarked(currentTarget) ? '已收藏' : '收藏'}</span>
                 </button>
+              </div>
+            )}
+
+            {/* Daily goal mini progress (always visible, not sidebar-dependent) */}
+            {!state.isComplete && (
+              <div className="mt-3 flex items-center justify-center gap-3">
+                {/* New words bar */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] font-medium text-zinc-400 dark:text-zinc-500 tabular-nums">
+                    今日 {dailyGoal.goal.todayNewCount + dailyGoal.goal.todayReviewCount}/{dailyGoal.goal.newWordsPerDay + dailyGoal.goal.reviewPerDay}
+                  </span>
+                  <div className="w-16 h-1 rounded-full bg-zinc-200/50 dark:bg-zinc-800/50 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[var(--color-action-blue)] transition-all duration-500"
+                      style={{ width: `${Math.min(100, dailyGoal.newPercent + dailyGoal.reviewPercent)}%` }}
+                    />
+                  </div>
+                  {dailyGoal.isAllDone && (
+                    <span className="text-[10px] text-green-500 font-semibold">✓</span>
+                  )}
+                </div>
               </div>
             )}
 
@@ -779,7 +818,7 @@ export default function Home() {
             <div className="mt-12 flex items-center gap-2.5">
               <AppleActionButton onClick={handleReset} variant="secondary">
                 <RotateCcw className="w-3.5 h-3.5" />
-                重置
+                重置本章
                 <kbd className="ml-0.5 px-1 py-[1px] text-[9px] leading-none rounded-[3px] bg-zinc-900/5 dark:bg-zinc-100/10 text-zinc-400 dark:text-zinc-500 font-mono">Esc</kbd>
               </AppleActionButton>
               <AppleActionButton onClick={handleListen} variant="secondary">
@@ -911,7 +950,17 @@ export default function Home() {
                   );
                 }
 
-                return null;
+                // All packs complete
+                return (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-lg leading-none animate-in zoom-in duration-500 delay-300">
+                      🎉
+                    </span>
+                    <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">
+                      已学完所有词包！
+                    </p>
+                  </div>
+                );
               })()}
 
               {/* SECONDARY: error review + full review (smaller, when errors exist) */}
@@ -959,12 +1008,20 @@ export default function Home() {
           "absolute bottom-0 left-0 right-0 z-10 transition-all duration-300",
           isChapterComplete ? "opacity-0 translate-y-4" : "opacity-100"
         )}>
-          <div className="flex items-center justify-center gap-10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-t border-zinc-200/40 dark:border-zinc-800/40 px-8 py-3">
+          <div className="flex items-center justify-center gap-8 bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-t border-zinc-200/40 dark:border-zinc-800/40 px-4 py-3">
             <StatItem value={formatTime(elapsedSeconds)} label="time" />
             <StatItem value={elapsedSeconds > 0 ? String(Math.round(state.stats.correct / (elapsedSeconds / 60) / 5)) : "0"} label="wpm" />
             <StatItem value={state.stats.letters > 0 ? `${Math.round((state.stats.correct / state.stats.letters) * 100)}` : "0"} label="acc" />
             <StatItem value={String(state.completedIndices.length)} label="完成" />
-            <StatItem value={String(state.wrongIndices.length)} label="需复习" />
+            <StatItem value={String(state.wrongIndices.length)} label="当前错误" />
+            {streak.currentStreak > 0 && (
+              <div className="flex flex-col items-center gap-0">
+                <span className="text-base font-semibold tracking-tight text-amber-500 tabular-nums">
+                  🔥 {streak.currentStreak}
+                </span>
+                <span className="text-[9px] font-medium uppercase tracking-widest text-zinc-400 dark:text-zinc-500">天数</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -975,7 +1032,7 @@ export default function Home() {
         )}>
           <div className="flex items-center gap-2 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-zinc-200/30 dark:border-zinc-800/30">
             <span className="text-[9px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">快捷键</span>
-            <ShortcutHint keys={["Esc"]} label="重置" />
+            <ShortcutHint keys={["Esc"]} label="重置本章" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
             <ShortcutHint keys={["⌃", "⇧", "P"]} label="发音" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
@@ -1045,7 +1102,7 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
       </div>
 
       {/* SRS Review badge */}
-      {!collapsed && srsDueCount > 0 && currentMode === "word" && (
+      {!collapsed && srsDueCount > 0 && (
         <div className="shrink-0 px-2.5 pt-3">
           <button
             onClick={onSRSReview}

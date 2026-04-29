@@ -56,6 +56,12 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
           const isTyped = i < len;
           const isCurrent = i === len;
           const isCorrect = isTyped ? input[i].correct : false;
+          const isJustTypedCorrect = isTyped && isCorrect && i === len - 1 && !isComplete;
+
+          // Word grouping for sentence mode
+          const isWordBoundary = i > 0 && target[i - 1] === " ";
+          const isWordEnd = i >= target.length - 1 || target[i + 1] === " ";
+          const isWordJustCompleted = isJustTypedCorrect && isWordEnd;
 
           const isRevealed = !isTyped && !isCurrent && revealedLetters[i];
 
@@ -76,28 +82,31 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
             colorClass = "text-red-500 dark:text-red-400";
           }
 
-          // When hints are off, show underscores for untyped characters (unless revealed)
-          const displayChar = !showHint && !isTyped && !isRevealed
-            ? (isSpace ? "\u00A0" : "_")
-            : (isSpace ? "\u00A0" : ch);
+          // Spaces show as midpoint dot so user can see them; hide chars when hints off
+          const displayChar = isSpace
+            ? "·"
+            : (!showHint && !isTyped && !isRevealed ? "_" : ch);
 
           return (
             <span
               key={i}
               className={cn(
                 "transition-colors duration-150 relative",
-                isSpace && "w-[16px] md:w-[24px]",
+                isSpace && "w-[12px] md:w-[16px]",
+                isWordBoundary && "ml-3 md:ml-4",
                 colorClass,
                 !isTyped && !isCurrent && !showHint && "font-black",
                 !isTyped && !isCurrent && showHint && "opacity-30",
-                isAllRed && "opacity-100"
+                isAllRed && "opacity-100",
+                isJustTypedCorrect && !isWordEnd && "animate-correct-pop",
+                isWordJustCompleted && "animate-word-done"
               )}
             >
               {displayChar}
               {/* Show correct character below when user types wrong */}
               {isTyped && !isCorrect && !isComplete && (
                 <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-green-500/70 dark:text-green-400/70 font-mono font-normal">
-                  {ch === " " ? "␣" : ch}
+                  {isSpace ? "·" : ch}
                 </span>
               )}
             </span>
@@ -146,6 +155,22 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
         @keyframes cursor-blink {
           0%, 50% { border-color: rgb(161 161 170); }
           51%, 100% { border-color: transparent; }
+        }
+        .animate-correct-pop {
+          animation: correct-pop 0.25s ease-out forwards;
+        }
+        @keyframes correct-pop {
+          0% { transform: scale(1.12); }
+          40% { transform: scale(1.06); }
+          100% { transform: scale(1); }
+        }
+        .animate-word-done {
+          animation: word-done 0.35s ease-out forwards;
+        }
+        @keyframes word-done {
+          0% { transform: scale(1.15); color: rgb(34 197 94); }
+          50% { transform: scale(1.08); color: rgb(34 197 94); }
+          100% { transform: scale(1); }
         }
       `}</style>
     </div>
