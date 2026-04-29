@@ -14,9 +14,11 @@ interface TypingAreaProps {
   showHint: boolean;
   revealedLetters: boolean[];
   errorFlash?: ErrorFlash;
+  onEmojiClick?: () => void;
+  dictationMode?: boolean;
 }
 
-export function TypingArea({ target, input, isComplete, showHint, revealedLetters, errorFlash = "none" }: TypingAreaProps) {
+export function TypingArea({ target, input, isComplete, showHint, revealedLetters, errorFlash = "none", onEmojiClick, dictationMode = false }: TypingAreaProps) {
   const len = input.length;
   const hasError = input.some((c) => !c.correct);
   const isShaking = errorFlash === "shake" || errorFlash === "shakeAll";
@@ -31,12 +33,17 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
 
       {/* Emoji display */}
       {singleEmoji && !isComplete && (
-        <span className="block text-5xl mb-4 text-center leading-none" role="img" aria-hidden="true">
+        <span
+          className="block text-5xl mb-4 text-center leading-none cursor-pointer transition-transform hover:scale-110 active:scale-95"
+          role="img"
+          aria-hidden="true"
+          onClick={onEmojiClick}
+        >
           {singleEmoji}
         </span>
       )}
       {sentenceEmojis.length > 0 && !isComplete && (
-        <div className="flex items-center justify-center gap-2 mb-4 text-2xl leading-none">
+        <div className="flex items-center justify-center gap-2 mb-4 text-2xl leading-none cursor-pointer transition-transform hover:scale-110 active:scale-95" onClick={onEmojiClick}>
           {sentenceEmojis.map((emoji, i) => (
             <span key={i} role="img" aria-hidden="true">{emoji}</span>
           ))}
@@ -82,10 +89,14 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
             colorClass = "text-red-500 dark:text-red-400";
           }
 
+          // Dictation mode: hide untyped characters entirely (no underscores)
+          const isHidden = dictationMode && !isTyped && !isRevealed;
           // Spaces show as midpoint dot so user can see them; hide chars when hints off
-          const displayChar = isSpace
-            ? "·"
-            : (!showHint && !isTyped && !isRevealed ? "_" : ch);
+          const displayChar = isHidden && !isSpace
+            ? ""
+            : isSpace
+              ? "·"
+              : (!showHint && !isTyped && !isRevealed ? "_" : ch);
 
           return (
             <span
