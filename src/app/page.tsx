@@ -495,10 +495,10 @@ export default function Home() {
     const chapterTitle = chapters.find((c) => c.chapter === state.chapter)?.title ?? `Chapter ${state.chapter}`;
     const totalLetters = state.stats.letters;
     const acc = totalLetters > 0 ? Math.round((state.stats.correct / totalLetters) * 100) : 0;
-    const shareText = `在 keykey.cc 上完成了「${chapterTitle}」的练习！正确率 ${acc}%，共 ${totalLetters} 个字母。你也来试试？`;
+    const shareText = `在 背单词 上完成了「${chapterTitle}」的练习！正确率 ${acc}%，共 ${totalLetters} 个字母。你也来试试？`;
 
     if (typeof navigator !== "undefined" && navigator.share) {
-      navigator.share({ title: "keykey.cc - 英语打字学习", text: shareText, url: "https://keykey.cc" }).catch(() => {});
+      navigator.share({ title: "背单词 - 英语学习", text: shareText, url: "https://english.angrach.top" }).catch(() => {});
     } else {
       navigator.clipboard.writeText(shareText).catch(() => {});
     }
@@ -1074,7 +1074,7 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
     )}>
       {/* Logo area */}
       <div className="flex items-center h-12 px-4 border-b border-zinc-200/30 dark:border-zinc-800/30 shrink-0">
-        {!collapsed && <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 tracking-tight">keykey.cc</span>}
+        {!collapsed && <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 tracking-tight">背单词</span>}
       </div>
 
       {/* Mode switches */}

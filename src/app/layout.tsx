@@ -14,14 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZenType | Premium Typing Practice",
+  title: "hello,world",
   description: "A focused, premium typing experience.",
   manifest: "/manifest.json",
   other: {
     "theme-color": "#000000",
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black",
-    "apple-mobile-web-app-title": "keykey",
+    "apple-mobile-web-app-title": "背单词",
   },
   icons: {
     apple: "/icons/icon-192x192.png",

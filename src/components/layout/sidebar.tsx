@@ -43,7 +43,7 @@ export function Sidebar({ collapsed, setCollapsed, currentMode, onModeChange }: 
             <div className="w-7 h-7 bg-zinc-900 dark:bg-zinc-100 rounded-[5px] flex items-center justify-center rotate-2 group-hover:rotate-6 transition-all duration-300 shadow-sm">
               <Keyboard className="w-4 h-4 text-white dark:text-zinc-900" />
             </div>
-            <span className="text-base tracking-tight text-zinc-800 dark:text-zinc-200">keykey.cc</span>
+            <span className="text-base tracking-tight text-zinc-800 dark:text-zinc-200">背单词</span>
           </div>
         )}
         {collapsed && (
