@@ -1,0 +1,13 @@
+{
+  "id": "life-basics",
+  "type": "word",
+  "title": "生活基础",
+  "description": "颜色、形状、时间和天气 — 生活场景基础词汇",
+  "difficulty": 1,
+  "tags": [
+    "日常",
+    "基础"
+  ],
+  "itemCount": 83,
+  "isBuiltin": true
+}

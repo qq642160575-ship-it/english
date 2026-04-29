@@ -1,0 +1,10 @@
+{
+  "id": "colors",
+  "type": "word",
+  "title": "颜色与形状",
+  "description": "基础颜色和形状词汇",
+  "difficulty": 1,
+  "tags": ["基础", "颜色", "形状"],
+  "itemCount": 30,
+  "isBuiltin": true
+}

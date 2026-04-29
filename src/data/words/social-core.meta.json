@@ -1,0 +1,13 @@
+{
+  "id": "social-core",
+  "type": "word",
+  "title": "社交与数字",
+  "description": "称呼、数字和情感表达 — 日常高频词汇",
+  "difficulty": 1,
+  "tags": [
+    "日常",
+    "高频"
+  ],
+  "itemCount": 94,
+  "isBuiltin": true
+}

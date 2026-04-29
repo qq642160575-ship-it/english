@@ -1,0 +1,10 @@
+{
+  "id": "body",
+  "type": "word",
+  "title": "身体部位",
+  "description": "人体各部位词汇",
+  "difficulty": 1,
+  "tags": ["基础", "身体"],
+  "itemCount": 35,
+  "isBuiltin": true
+}

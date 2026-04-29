@@ -1,0 +1,13 @@
+{
+  "id": "action-beyond",
+  "type": "word",
+  "title": "行动与拓展",
+  "description": "地点、动作、动物和编程 — 拓展应用词汇",
+  "difficulty": 2,
+  "tags": [
+    "进阶",
+    "拓展"
+  ],
+  "itemCount": 134,
+  "isBuiltin": true
+}

@@ -1,0 +1,10 @@
+{
+  "id": "animals",
+  "type": "word",
+  "title": "动物",
+  "description": "常见动物词汇",
+  "difficulty": 1,
+  "tags": ["基础", "动物"],
+  "itemCount": 40,
+  "isBuiltin": true
+}

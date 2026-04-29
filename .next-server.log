@@ -1,0 +1,1448 @@
+
+> english-test-temp@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.80:3000
+✓ Ready in 238ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /home/edy/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /home/edy/Music/下载/english-test/package-lock.json
+
+
+ GET / 200 in 2.4s (next.js: 2.2s, application-code: 233ms)
+[browser] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html lang="en" className="geist_a715..." suppressHydrationWarning={true}>
+                          <body
++                           className="h-screen overflow-hidden flex bg-background text-foreground"
+-                           className="h-screen overflow-hidden flex bg-background text-foreground localhost_3000"
+                          >
+                  ...
+ 
+ GET / 200 in 33ms (next.js: 5ms, application-code: 28ms)
+ GET / 200 in 44ms (next.js: 3ms, application-code: 41ms)
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+✓ Compiled in 52ms
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+    at Set.forEach (<anonymous>) (<anonymous>)
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+✓ Compiled in 58ms
+ GET / 200 in 125ms (next.js: 61ms, application-code: 64ms)
+ GET / 200 in 15ms (next.js: 1821µs, application-code: 13ms)
+[browser] Uncaught ReferenceError: useProgress is not defined
+    at Home (../../下载/english-test/src/app/page.tsx:26:40)
+  24 |   const { state, handleCharInput, handleBackspace, loadItem, completeItem, skipItem, switc...
+  25 |   const { voices, selectedVoice, setSelectedVoice, speak, cancel } = useSpeech();
+> 26 |   const { save, load, resetStorage } = useProgress();
+     |                                        ^
+  27 |
+  28 |   const [categoryItems, setCategoryItems] = useState<(WordItem | SentenceItem)[]>([]);
+  29 |   const [showDataManager, setShowDataManager] = useState(false);
+⨯ ReferenceError: useProgress is not defined
+    at Home (src/app/page.tsx:26:40)
+  24 |   const { state, handleCharInput, handleBackspace, loadItem, completeItem, skipItem, switc...
+  25 |   const { voices, selectedVoice, setSelectedVoice, speak, cancel } = useSpeech();
+> 26 |   const { save, load, resetStorage } = useProgress();
+     |                                        ^
+  27 |
+  28 |   const [categoryItems, setCategoryItems] = useState<(WordItem | SentenceItem)[]>([]);
+  29 |   const [showDataManager, setShowDataManager] = useState(false); {
+  digest: '3144580958'
+}
+ GET /? 500 in 174ms (next.js: 6ms, application-code: 169ms)
+[browser] Uncaught ReferenceError: useProgress is not defined
+    at Home (../../下载/english-test/src/app/page.tsx:26:40)
+  24 |   const { state, handleCharInput, handleBackspace, loadItem, completeItem, skipItem, switc...
+  25 |   const { voices, selectedVoice, setSelectedVoice, speak, cancel } = useSpeech();
+> 26 |   const { save, load, resetStorage } = useProgress();
+     |                                        ^
+  27 |
+  28 |   const [categoryItems, setCategoryItems] = useState<(WordItem | SentenceItem)[]>([]);
+  29 |   const [showDataManager, setShowDataManager] = useState(false);
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 66ms
+ GET / 200 in 236ms (next.js: 53ms, application-code: 183ms)
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+ GET / 200 in 43ms (next.js: 5ms, application-code: 38ms)
+✓ Compiled in 47ms
+✓ Compiled in 19ms
+✓ Compiled in 42ms
+ GET / 200 in 19ms (next.js: 4ms, application-code: 15ms)
+✓ Compiled in 0ms
+ GET / 200 in 246ms (next.js: 113ms, application-code: 133ms)
+ GET / 200 in 272ms (next.js: 49ms, application-code: 223ms)
+ GET / 200 in 190ms (next.js: 143ms, application-code: 48ms)
+ GET / 200 in 27ms (next.js: 2ms, application-code: 25ms)
+ GET / 200 in 195ms (next.js: 3ms, application-code: 193ms)
+✓ Compiled in 26ms
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+ GET / 200 in 48ms (next.js: 4ms, application-code: 44ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 22ms
+✓ Compiled in 23ms
+✓ Compiled in 21ms
+✓ Compiled in 22ms
+✓ Compiled in 88ms
+ GET / 200 in 138ms (next.js: 70ms, application-code: 68ms)
+ GET / 200 in 31ms (next.js: 1722µs, application-code: 29ms)
+ GET / 200 in 15ms (next.js: 2ms, application-code: 13ms)
+✓ Compiled in 53ms
+✓ Compiled in 90ms
+ GET / 200 in 137ms (next.js: 62ms, application-code: 75ms)
+ GET / 200 in 29ms (next.js: 1538µs, application-code: 27ms)
+ GET / 200 in 17ms (next.js: 2ms, application-code: 14ms)
+✓ Compiled in 33ms
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+ GET / 200 in 174ms (next.js: 7ms, application-code: 168ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+ GET / 200 in 51ms (next.js: 10ms, application-code: 41ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 23ms
+✓ Compiled in 63ms
+✓ Compiled in 20ms
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 28ms
+⨯ ReferenceError: Cannot access 'handleReset' before initialization
+    at Home (src/app/page.tsx:215:7)
+  213 |     window.addEventListener("keydown", handler);
+  214 |     return () => window.removeEventListener("keydown", handler);
+> 215 |   }, [handleReset, handleListen, handleSkip]);
+      |       ^
+  216 |
+  217 |   // Handlers
+  218 |   const handleCategoryChange = useCallback((categoryId: string) => { {
+  digest: '1615368448'
+}
+ GET / 500 in 57ms (next.js: 5ms, application-code: 52ms)
+✓ Compiled in 42ms
+✓ Compiled in 43ms
+✓ Compiled in 53ms
+✓ Compiled in 21ms
+✓ Compiled in 23ms
+ GET / 200 in 54ms (next.js: 5ms, application-code: 49ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 22ms
+ GET / 200 in 52ms (next.js: 5ms, application-code: 46ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 23ms
+ GET / 200 in 58ms (next.js: 5ms, application-code: 53ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 26ms
+[browser] The final argument passed to useEffect changed size between renders. The order and size of this array must remain constant.
+
+Previous: [true]
+Incoming: [] 
+    at Home (../../下载/english-test/src/app/page.tsx:176:12)
+    at Set.forEach (<anonymous>)
+  174 |
+  175 |   // Ctrl+Shift+V: toggle hint mode (also prevents paste from browser)
+> 176 |   useEffect(() => {
+      |            ^
+  177 |     const handler = (e: KeyboardEvent) => {
+  178 |       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "V") {
+  179 |         e.preventDefault(); (../../下载/english-test/src/app/page.tsx:176:12)
+ GET / 200 in 48ms (next.js: 3ms, application-code: 45ms)
+✓ Compiled in 48ms
+✓ Compiled in 25ms
+✓ Compiled in 29ms
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+[browser] Encountered two children with the same key, `basic`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. 
+✓ Compiled in 21ms
+✓ Compiled in 22ms
+✓ Compiled in 22ms
+ GET / 200 in 46ms (next.js: 6ms, application-code: 41ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 25ms
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 78ms
+ GET / 200 in 143ms (next.js: 72ms, application-code: 71ms)
+ GET / 200 in 29ms (next.js: 1320µs, application-code: 28ms)
+ GET / 200 in 15ms (next.js: 2ms, application-code: 13ms)
+ GET / 200 in 182ms (next.js: 4ms, application-code: 178ms)
+Error: Cannot apply unknown utility class `border-border`
+    [2m[at onInvalidCandidate (/home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:21:1511)][0m
+    [2m[at Ne (/home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:16:38252)][0m
+    [2m[at /home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:21:355][0m
+    [2m[at Ur (/home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:3:1733)][0m
+    [2m[at I (/home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:3:1377)][0m
+    [2m[at Ee (/home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:21:172)][0m
+    [2m[at vn (/home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:38:294)][0m
+    [2m[at async kn (/home/edy/Music/下载/english-test/node_modules/tailwindcss/dist/lib.js:38:631)][0m
+    [2m[at async Xr (/home/edy/Music/下载/english-test/node_modules/@tailwindcss/node/dist/index.js:10:3415)][0m
+    [2m[at async E (/home/edy/Music/下载/english-test/node_modules/@tailwindcss/postcss/dist/index.js:10:3979)][0m
+✓ Compiled in 60ms
+⨯ ./Music/下载/english-test/src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /home/edy/Music/下载/english-test/src/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/input.js:135:16)]
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/home/edy/Music/下载/english-test/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/globals.css [Client Component Browser]
+    ./Music/下载/english-test/src/app/layout.tsx [Server Component]
+
+
+ GET / 500 in 628ms (next.js: 536ms, application-code: 92ms)
+⨯ ./Music/下载/english-test/src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /home/edy/Music/下载/english-test/src/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/input.js:135:16)]
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/home/edy/Music/下载/english-test/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/globals.css [Client Component Browser]
+    ./Music/下载/english-test/src/app/layout.tsx [Server Component]
+
+
+ GET / 500 in 10ms (next.js: 5ms, application-code: 6ms)
+⨯ ./Music/下载/english-test/src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /home/edy/Music/下载/english-test/src/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/input.js:135:16)]
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/home/edy/Music/下载/english-test/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/globals.css [Client Component Browser]
+    ./Music/下载/english-test/src/app/layout.tsx [Server Component]
+
+
+⨯ ./Music/下载/english-test/src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /home/edy/Music/下载/english-test/src/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/input.js:135:16)]
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/home/edy/Music/下载/english-test/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/globals.css [Client Component Browser]
+    ./Music/下载/english-test/src/app/layout.tsx [Server Component]
+
+
+ GET / 500 in 11ms (next.js: 5ms, application-code: 6ms)
+ GET / 500 in 16ms (next.js: 9ms, application-code: 7ms)
+[browser] Uncaught Error: ./Music/下载/english-test/src/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /home/edy/Music/下载/english-test/src/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/input.js:135:16)]
+    [at error (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/home/edy/Music/下载/english-test/node_modules/@tailwindcss/postcss/dist/index.js:10:6913)]
+    [at async LazyResult.runAsync (turbopack:///[project]/Music/下载/english-test/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/child_process/evaluate.ts:89:23)]
+
+Import trace:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/globals.css [Client Component Browser]
+    ./Music/下载/english-test/src/app/layout.tsx [Server Component]
+
+
+⨯ ReferenceError: useTheme is not defined
+    at AppleSidebar (src/app/page.tsx:502:43)
+  500 |   collapsed: boolean; currentMode: LearningMode; onModeChange: (m: LearningMode) => void;...
+  501 | }) {
+> 502 |   const { isDark, toggle: toggleTheme } = useTheme();
+      |                                           ^
+  503 |   const ModeIcon = modeIcons[currentMode];
+  504 |
+  505 |   return ( {
+  digest: '2946241049'
+}
+ GET / 500 in 241ms (next.js: 67ms, application-code: 174ms)
+✓ Compiled in 70ms
+ GET / 200 in 125ms (next.js: 58ms, application-code: 67ms)
+ GET / 200 in 15ms (next.js: 1929µs, application-code: 13ms)
+ GET / 200 in 153ms (next.js: 3ms, application-code: 150ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 52ms
+✓ Compiled in 49ms
+✓ Compiled in 70ms
+ GET / 200 in 126ms (next.js: 64ms, application-code: 62ms)
+ GET / 200 in 33ms (next.js: 1781µs, application-code: 31ms)
+ GET / 200 in 14ms (next.js: 1937µs, application-code: 13ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+ GET / 200 in 165ms (next.js: 7ms, application-code: 159ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 49ms
+✓ Compiled in 58ms
+✓ Compiled in 24ms
+✓ Compiled in 44ms
+✓ Compiled in 46ms
+✓ Compiled in 29ms
+✓ Compiled in 25ms
+✓ Compiled in 26ms
+✓ Compiled in 31ms
+ GET / 200 in 29ms (next.js: 7ms, application-code: 23ms)
+[browser] ./Music/下载/english-test/src/components/game/virtual-keyboard.tsx:56:1
+Expected ',', got '<eof>'
+  54 |   );
+  55 | }
+> 56 |
+     | ^
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/components/game/virtual-keyboard.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/components/game/virtual-keyboard.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component] 
+ GET / 200 in 42ms (next.js: 4ms, application-code: 38ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 53ms
+ GET / 200 in 50ms (next.js: 3ms, application-code: 47ms)
+ GET / 200 in 34ms (next.js: 3ms, application-code: 32ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+ GET / 200 in 45ms (next.js: 3ms, application-code: 41ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 28ms
+✓ Compiled in 25ms
+✓ Compiled in 60ms
+ GET / 200 in 36ms (next.js: 4ms, application-code: 32ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 27ms
+✓ Compiled in 31ms
+✓ Compiled in 22ms
+✓ Compiled in 25ms
+✓ Compiled in 29ms
+✓ Compiled in 62ms
+ GET / 200 in 128ms (next.js: 60ms, application-code: 68ms)
+ GET / 200 in 24ms (next.js: 1904µs, application-code: 22ms)
+ GET / 200 in 162ms (next.js: 6ms, application-code: 156ms)
+ GET / 200 in 43ms (next.js: 5ms, application-code: 38ms)
+✓ Compiled in 49ms
+✓ Compiled in 25ms
+✓ Compiled in 46ms
+✓ Compiled in 26ms
+✓ Compiled in 68ms
+ GET / 200 in 128ms (next.js: 55ms, application-code: 73ms)
+ GET / 200 in 30ms (next.js: 1810µs, application-code: 28ms)
+ GET / 200 in 15ms (next.js: 1801µs, application-code: 13ms)
+✓ Compiled in 42ms
+[browser] TTS error: interrupted (file:///home/edy/Music/下载/english-test/.next/dev/static/chunks/Music_%E4%B8%8B%E8%BD%BD_english-test_src_0x3ys9v._.js:317:41)
+✓ Compiled in 65ms
+ GET / 200 in 120ms (next.js: 57ms, application-code: 64ms)
+ GET / 200 in 14ms (next.js: 1626µs, application-code: 12ms)
+✓ Compiled in 26ms
+✓ Compiled in 123ms
+ GET / 200 in 222ms (next.js: 82ms, application-code: 140ms)
+ GET / 200 in 125ms (next.js: 50ms, application-code: 75ms)
+ GET / 200 in 37ms (next.js: 3ms, application-code: 34ms)
+ GET / 200 in 13ms (next.js: 1307µs, application-code: 12ms)
+✓ Compiled in 27ms
+✓ Compiled in 25ms
+✓ Compiled in 23ms
+✓ Compiled in 23ms
+✓ Compiled in 26ms
+✓ Compiled in 26ms
+✓ Compiled in 31ms
+ GET / 200 in 184ms (next.js: 9ms, application-code: 175ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 27ms
+ GET / 200 in 43ms (next.js: 7ms, application-code: 36ms)
+✓ Compiled in 39ms
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 32ms
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+✓ Compiled in 29ms
+✓ Compiled in 26ms
+✓ Compiled in 23ms
+✓ Compiled in 26ms
+[browser] The final argument passed to useEffect changed size between renders. The order and size of this array must remain constant.
+
+Previous: [false, hair, true, (state)=>{
+            try {
+                const data = loadFromStorage();
+                const modeKey = state.mode;
+                const categoryKey = `${state.category}`;
+                const chapterKey = `ch${state.chapter}`;
+                if (!data[modeKey][categoryKey]) {
+                    data[modeKey][categoryKey] = {};
+                }
+                data[modeKey][categoryKey][chapterKey] = {
+                    index: state.index,
+                    completed: Array.from(new Set(state.completedIndices))
+                };
+                localStorage.setItem(__TURBOPACK__imported__module__$5b$project$5d2f$Music$2f_4e0b$$_8f7d$$2f$english$2d$test$2f$src$2f$lib$2f$constants$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["STORAGE_KEY"], JSON.stringify(data));
+            } catch  {
+            /* silent fail */ }
+        }]
+Incoming: [false, hair, true, (state)=>{
+            try {
+                const data = loadFromStorage();
+                const modeKey = state.mode;
+                const categoryKey = `${state.category}`;
+                const chapterKey = `ch${state.chapter}`;
+                if (!data[modeKey][categoryKey]) {
+                    data[modeKey][categoryKey] = {};
+                }
+                data[modeKey][categoryKey][chapterKey] = {
+                    index: state.index,
+                    completed: Array.from(new Set(state.completedIndices))
+                };
+                localStorage.setItem(__TURBOPACK__imported__module__$5b$project$5d2f$Music$2f_4e0b$$_8f7d$$2f$english$2d$test$2f$src$2f$lib$2f$constants$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["STORAGE_KEY"], JSON.stringify(data));
+            } catch  {
+            /* silent fail */ }
+        }, ()=>{
+            dispatch({
+                type: "CLEAR_WRONG"
+            });
+        }] 
+    at Home (../../下载/english-test/src/app/page.tsx:115:12)
+    at Set.forEach (<anonymous>)
+  113 |
+  114 |   // On complete
+> 115 |   useEffect(() => {
+      |            ^
+  116 |     if (!state.isComplete || !currentTarget) return;
+  117 |     if (soundEnabled) speakRef.current(currentTarget, { rate: COMPLETE_RATE });
+  118 |     save(stateRef.current); (../../下载/english-test/src/app/page.tsx:115:12)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+ GET / 200 in 49ms (next.js: 7ms, application-code: 42ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+ GET / 200 in 43ms (next.js: 7ms, application-code: 35ms)
+[browser] TTS error: interrupted (../../下载/english-test/src/hooks/use-speech.ts:43:21)
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET / 500 in 24ms (next.js: 11ms, application-code: 13ms)
+⨯ ./Music/下载/english-test/src/app/page.tsx:10:1
+Module not found: Can't resolve '@/hooks/use-auto-backup'
+  [90m 8 |[0m [36mimport[0m { useIpaDisplay } [36mfrom[0m [32m"@/hooks/use-ipa-display"[0m;
+  [90m 9 |[0m [36mimport[0m { useTheme } [36mfrom[0m [32m"@/hooks/use-theme"[0m;
+[31m[1m>[0m [90m10 |[0m [36mimport[0m { useAutoBackup } [36mfrom[0m [32m"@/hooks/use-auto-backup"[0m;
+  [90m   |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m [36mimport[0m { dataRegistry } [36mfrom[0m [32m"@/data/registry"[0m;
+  [90m12 |[0m [36mimport[0m { [33mAUTO_ADVANCE_DELAY[0m, [33mINITIAL_SPEAK_DELAY[0m, [33mCOMPLETE_RATE[0m } [36mfrom[0m [32m"@/lib/constants"[0m;
+  [90m13 |[0m [36mimport[0m { [33mLearningMode[0m, [33mWordItem[0m, [33mSentenceItem[0m, [33mChapterMeta[0m } [36mfrom[0m [32m"@/data/types"[0m;
+
+Import map: aliased to relative './src/hooks/use-auto-backup' inside of [project]/Music/下载/english-test
+
+
+Import traces:
+  Client Component Browser:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component Browser]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./Music/下载/english-test/src/app/page.tsx [Client Component SSR]
+    ./Music/下载/english-test/src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+ GET / 500 in 16ms (next.js: 4ms, application-code: 12ms)
+✓ Compiled in 71ms
+✓ Compiled in 34ms
+✓ Compiled in 32ms
+ GET / 200 in 22ms (next.js: 4ms, application-code: 18ms)
+ GET / 200 in 314ms (next.js: 92ms, application-code: 222ms)
+ GET / 200 in 38ms (next.js: 5ms, application-code: 32ms)
+[?25h

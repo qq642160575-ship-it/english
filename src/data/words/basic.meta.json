@@ -1,0 +1,10 @@
+{
+  "id": "basic-words",
+  "type": "word",
+  "title": "基础词汇",
+  "description": "29 个最常用英语基础单词",
+  "difficulty": 1,
+  "tags": ["beginner", "core"],
+  "itemCount": 29,
+  "isBuiltin": true
+}

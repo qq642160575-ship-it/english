@@ -1,0 +1,10 @@
+{
+  "id": "food",
+  "type": "word",
+  "title": "食物与饮料",
+  "description": "常见食物、水果、饮料词汇",
+  "difficulty": 1,
+  "tags": ["基础", "食物", "饮料"],
+  "itemCount": 40,
+  "isBuiltin": true
+}

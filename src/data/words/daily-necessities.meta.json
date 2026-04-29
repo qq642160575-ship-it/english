@@ -1,0 +1,13 @@
+{
+  "id": "daily-necessities",
+  "type": "word",
+  "title": "饮食与用品",
+  "description": "食物、日常用品和衣物 — 衣食住行必备词汇",
+  "difficulty": 1,
+  "tags": [
+    "日常",
+    "高频"
+  ],
+  "itemCount": 100,
+  "isBuiltin": true
+}

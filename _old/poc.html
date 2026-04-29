@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TTS 发音测试 POC</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #f5f5f5; padding: 20px; color: #333; }
+  .container { max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  .subtitle { color: #666; margin-bottom: 20px; font-size: 14px; }
+
+  .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+  /* Custom speak section */
+  .custom-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .custom-row input { flex: 1; padding: 10px 14px; font-size: 18px; border: 2px solid #ddd; border-radius: 8px; outline: none; letter-spacing: 2px; }
+  .custom-row input:focus { border-color: #4A90D9; }
+  .custom-row button { padding: 10px 24px; font-size: 16px; background: #4A90D9; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+  .custom-row button:hover { background: #357ABD; }
+
+  .voice-select { margin-bottom: 12px; }
+  .voice-select label { font-weight: 600; font-size: 14px; margin-right: 8px; }
+  .voice-select select { padding: 6px 12px; font-size: 14px; border-radius: 6px; border: 1px solid #ddd; }
+
+  .test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+  .test-item { padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .test-item:hover { border-color: #4A90D9; background: #f0f6ff; }
+  .test-item .label { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .test-item .desc { font-size: 11px; color: #888; }
+  .test-item .badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-top: 4px; }
+  .badge-letter { background: #e8f5e9; color: #2e7d32; }
+  .badge-phonetic { background: #fff3e0; color: #e65100; }
+  .badge-word { background: #e3f2fd; color: #1565c0; }
+  .badge-prefix { background: #f3e5f5; color: #6a1b9a; }
+
+  .section-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .status { margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 13px; display: none; }
+  .status.speaking { display: block; background: #e8f5e9; color: #2e7d32; }
+  .status.error { display: block; background: #ffebee; color: #c62828; }
+
+  .notes { width: 100%; min-height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; resize: vertical; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔊 TTS 发音测试</h1>
+  <p class="subtitle">测试 Web Speech API 对不同文本片段的发音效果，确定音标发音方案</p>
+
+  <!-- Voice selection -->
+  <div class="card">
+    <div class="voice-select">
+      <label for="voiceSelect">发音语音：</label>
+      <select id="voiceSelect"><option value="">加载中...</option></select>
+    </div>
+    <div class="custom-row">
+      <input type="text" id="customInput" placeholder="输入任意文本测试发音..." autofocus>
+      <button id="speakBtn">朗读</button>
+    </div>
+    <div class="custom-row">
+      <label><input type="checkbox" id="autoPlayCheck" checked> 点击测试项自动播放</label>
+    </div>
+    <div id="status" class="status">正在朗读...</div>
+  </div>
+
+  <!-- Test: Single letters (letter names) -->
+  <div class="card">
+    <div class="section-title">🔤 单字母 — 字母名读音</div>
+    <div class="test-grid" id="letterTests"></div>
+  </div>
+
+  <!-- Test: Phonetic spellings -->
+  <div class="card">
+    <div class="section-title">🔊 音标拼写 — 尝试让 TTS 发出音标音</div>
+    <div class="test-grid" id="phoneticTests"></div>
+  </div>
+
+  <!-- Test: Word prefix fragments -->
+  <div class="card">
+    <div class="section-title">📝 单词前缀 — 累积式发音（核心测试）</div>
+    <div class="test-grid" id="prefixTests"></div>
+  </div>
+
+  <!-- Test: Complete words -->
+  <div class="card">
+    <div class="section-title">✅ 完整单词发音（标准）</div>
+    <div class="test-grid" id="wordTests"></div>
+  </div>
+
+  <!-- Test: Full sentences -->
+  <div class="card">
+    <div class="section-title">📖 完整句子发音</div>
+    <div class="test-grid" id="sentenceTests"></div>
+  </div>
+
+  <!-- Test notes -->
+  <div class="card">
+    <div class="section-title">📋 测试记录（在此记录各方案听觉效果）</div>
+    <textarea class="notes" id="testNotes" placeholder="记录测试结论...
+例如：
+- 'c' → 字母名 /siː/ ❌
+- 'ka' → 听起来像 /kɑː/ 近似 /kæ/ ⚠️
+- 'cat' → 完整单词发音自然 ✅"></textarea>
+  </div>
+</div>
+
+<script>
+const speechSynth = window.speechSynthesis;
+let voices = [];
+
+function loadVoices() {
+  voices = speechSynth.getVoices();
+  const select = document.getElementById('voiceSelect');
+  select.innerHTML = '';
+  const enVoices = voices.filter(v => v.lang.startsWith('en'));
+  if (enVoices.length === 0) {
+    // Fallback: show all voices
+    voices.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      opt.textContent = `${v.name} (${v.lang})`;
+      select.appendChild(opt);
+    });
+  } else {
+    enVoices.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.name;
+      const label = v.lang.startsWith('en-US') ? '🇺🇸' : v.lang.startsWith('en-GB') ? '🇬🇧' : '🇦🇺';
+      opt.textContent = `${label} ${v.name}`;
+      if (v.lang.startsWith('en-US')) opt.selected = true;
+      select.appendChild(opt);
+    });
+  }
+}
+
+loadVoices();
+if (speechSynth.onvoiceschanged !== undefined) {
+  speechSynth.onvoiceschanged = loadVoices;
+}
+
+function speak(text) {
+  if (!text) return;
+  speechSynth.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.7;
+  utterance.pitch = 1.0;
+
+  const selectedVoice = document.getElementById('voiceSelect').value;
+  if (selectedVoice) {
+    const voice = voices.find(v => v.name === selectedVoice);
+    if (voice) utterance.voice = voice;
+  }
+
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = `正在朗读: "${text}"`;
+  statusEl.className = 'status speaking';
+
+  utterance.onend = () => { statusEl.className = 'status'; };
+  utterance.onerror = (e) => {
+    statusEl.textContent = `发音错误: ${e.error}`;
+    statusEl.className = 'status error';
+  };
+
+  speechSynth.speak(utterance);
+}
+
+// Custom input
+document.getElementById('speakBtn').addEventListener('click', () => {
+  const text = document.getElementById('customInput').value;
+  speak(text);
+});
+document.getElementById('customInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const text = e.target.value;
+    speak(text);
+  }
+});
+
+// Helper: create test items
+function createTestItem(text, description, badgeClass, badgeLabel) {
+  const div = document.createElement('div');
+  div.className = 'test-item';
+  div.innerHTML = `<div class="label">${text}</div><div class="desc">${description}</div><span class="badge ${badgeClass}">${badgeLabel}</span>`;
+  div.addEventListener('click', () => {
+    document.getElementById('customInput').value = text;
+    if (document.getElementById('autoPlayCheck').checked) {
+      speak(text);
+    }
+  });
+  return div;
+}
+
+// 1. Letter names
+const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+const letterGrid = document.getElementById('letterTests');
+letters.forEach(l => {
+  letterGrid.appendChild(createTestItem(l, `字母名: /${l}/`, 'badge-letter', '字母名'));
+});
+
+// 2. Phonetic spellings
+const phoneticTests = [
+  // Vowels
+  { text: 'ae', desc: '近似 /æ/' },
+  { text: 'ah', desc: '近似 /ɑː/' },
+  { text: 'eh', desc: '近似 /ɛ/' },
+  { text: 'ee', desc: '近似 /iː/' },
+  { text: 'ih', desc: '近似 /ɪ/' },
+  { text: 'oh', desc: '近似 /oʊ/' },
+  { text: 'oo', desc: '近似 /uː/' },
+  { text: 'uh', desc: '近似 /ʌ/' },
+  // Consonants
+  { text: 'k', desc: '字母 k /keɪ/' },
+  { text: 'ka', desc: '近似 /kæ/' },
+  { text: 'ke', desc: '近似 /kɛ/' },
+  { text: 'ki', desc: '近似 /kɪ/' },
+  { text: 'ko', desc: '近似 /kɑː/' },
+  { text: 'ku', desc: '近似 /kʌ/' },
+  // Specific sound combos
+  { text: 'kæ', desc: '直接写音标字符' },
+  { text: 'kæt', desc: 'cat 的音标拼写' },
+  { text: 'kat', desc: 'cat 的简单拼写' },
+  { text: 'kaet', desc: 'cat 的变体拼写' },
+  { text: 'appul', desc: 'apple 的拼写' },
+  { text: 'aple', desc: 'apple 的简单拼写' },
+  { text: 'buk', desc: 'book 的拼写' },
+  { text: 'bok', desc: 'book 的变体' },
+  { text: 'stuh-dent', desc: 'student 拆分' },
+];
+const phoneticGrid = document.getElementById('phoneticTests');
+phoneticTests.forEach(t => {
+  phoneticGrid.appendChild(createTestItem(t.text, t.desc, 'badge-phonetic', '音标拼写'));
+});
+
+// 3. Word prefixes (cumulative)
+const prefixGroups = [
+  { word: 'cat', prefixes: ['c', 'ca', 'cat'] },
+  { word: 'dog', prefixes: ['d', 'do', 'dog'] },
+  { word: 'book', prefixes: ['b', 'bo', 'boo', 'book'] },
+  { word: 'apple', prefixes: ['a', 'ap', 'app', 'appl', 'apple'] },
+  { word: 'student', prefixes: ['s', 'st', 'stu', 'stud', 'stude', 'student'] },
+  { word: 'hello', prefixes: ['h', 'he', 'hel', 'hell', 'hello'] },
+  { word: 'world', prefixes: ['w', 'wo', 'wor', 'worl', 'world'] },
+  { word: 'water', prefixes: ['w', 'wa', 'wat', 'wate', 'water'] },
+  { word: 'people', prefixes: ['p', 'pe', 'peo', 'peop', 'peopl', 'people'] },
+  { word: 'english', prefixes: ['e', 'en', 'eng', 'engl', 'engli', 'englis', 'english'] },
+];
+const prefixGrid = document.getElementById('prefixTests');
+prefixGroups.forEach(g => {
+  g.prefixes.forEach((p, i) => {
+    const label = i === g.prefixes.length - 1 ? '✅ 完整' : `↳ ${i+1}/${g.prefixes.length}`;
+    prefixGrid.appendChild(createTestItem(p, `${g.word} → 第${i+1}键`, 'badge-prefix', label));
+  });
+});
+
+// 4. Complete words
+const wordTests = [
+  'cat', 'dog', 'book', 'apple', 'student', 'hello', 'world',
+  'water', 'people', 'english', 'family', 'school', 'teacher',
+  'morning', 'evening', 'beautiful', 'important', 'different',
+];
+const wordGrid = document.getElementById('wordTests');
+wordTests.forEach(w => {
+  wordGrid.appendChild(createTestItem(w, `完整单词`, 'badge-word', '单词'));
+});
+
+// 5. Sentences
+const sentenceTests = [
+  'I am a student.',
+  'This is a book.',
+  'How are you?',
+  'Nice to meet you.',
+  'What is your name?',
+  'I like reading books.',
+  'She goes to school every day.',
+  'Can you help me please?',
+  'The weather is nice today.',
+  'I want to learn English.',
+];
+const sentenceGrid = document.getElementById('sentenceTests');
+sentenceTests.forEach(s => {
+  sentenceGrid.appendChild(createTestItem(s, `完整句子`, 'badge-word', '句子'));
+});
+
+console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`).join('\n'));
+</script>
+</body>
+</html>

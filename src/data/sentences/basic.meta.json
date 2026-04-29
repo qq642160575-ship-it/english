@@ -1,0 +1,10 @@
+{
+  "id": "basic-sentences",
+  "type": "sentence",
+  "title": "基础句子",
+  "description": "10 个最常用英语基础句子",
+  "difficulty": 1,
+  "tags": ["beginner", "core", "daily"],
+  "itemCount": 10,
+  "isBuiltin": true
+}

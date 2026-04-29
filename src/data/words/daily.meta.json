@@ -1,0 +1,10 @@
+{
+  "id": "daily",
+  "type": "word",
+  "title": "日常用品",
+  "description": "家居和日常用品词汇",
+  "difficulty": 1,
+  "tags": ["基础", "日常", "家居"],
+  "itemCount": 50,
+  "isBuiltin": true
+}
