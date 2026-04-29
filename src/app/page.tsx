@@ -1184,9 +1184,9 @@ export default function Home() {
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
             <ShortcutHint keys={["Space"]} label="加速" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
-            <ShortcutHint keys={["⌃", "⇧", "P"]} label="发音" />
+            <ShortcutHint keys={["Ctrl", "Shift", "P"]} label="发音" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
-            <ShortcutHint keys={["⌃", "⇧", "K"]} label="跳过" />
+            <ShortcutHint keys={["Ctrl", "Shift", "K"]} label="跳过" />
           </div>
         </div>
       </main>
