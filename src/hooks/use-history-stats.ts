@@ -35,9 +35,9 @@ function todayKey(): string {
 }
 
 export function useHistoryStats() {
-  const [stats, setStats] = useState<HistoryStats>(loadStats);
+  const [stats, setStats] = useState<HistoryStats>({ days: {} });
 
-  // Sync from localStorage on mount
+  // Sync from localStorage on mount (avoid hydration mismatch: server always sees empty)
   useEffect(() => {
     setStats(loadStats());
   }, []);

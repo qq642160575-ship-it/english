@@ -16,9 +16,10 @@ interface TypingAreaProps {
   errorFlash?: ErrorFlash;
   onEmojiClick?: () => void;
   dictationMode?: boolean;
+  hasErrors?: boolean;
 }
 
-export function TypingArea({ target, input, isComplete, showHint, revealedLetters, errorFlash = "none", onEmojiClick, dictationMode = false }: TypingAreaProps) {
+export function TypingArea({ target, input, isComplete, showHint, revealedLetters, errorFlash = "none", onEmojiClick, dictationMode = false, hasErrors = false }: TypingAreaProps) {
   const len = input.length;
   const isShaking = errorFlash === "shake";
 
@@ -105,9 +106,14 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
               )}
             >
               {displayChar}
-              {/* Show correct character below when user types wrong */}
-              {isTyped && !isCorrect && !isComplete && (
-                <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-green-500/70 dark:text-green-400/70 font-mono font-normal">
+              {/* Show correct character below when user types wrong (persist after completion) */}
+              {isTyped && !isCorrect && (
+                <span className={cn(
+                  "absolute left-1/2 -translate-x-1/2 font-mono font-normal",
+                  isComplete
+                    ? "-bottom-7 text-[10px] text-green-400/60 dark:text-green-300/60"
+                    : "-bottom-5 text-xs text-green-500/70 dark:text-green-400/70"
+                )}>
                   {isSpace ? "·" : ch}
                 </span>
               )}
@@ -117,8 +123,14 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
       </div>
 
       {isComplete && (
-        <div className="absolute top-1/2 -translate-y-1/2 flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-          <span className="text-2xl md:text-4xl font-black text-green-500 dark:text-green-400 drop-shadow-md">✓</span>
+        <div className="absolute top-1/2 -translate-y-1/2 flex items-center gap-2 animate-in fade-in zoom-in duration-300 pointer-events-none">
+          {hasErrors ? (
+            <span className="text-sm md:text-base font-semibold text-amber-500/80 dark:text-amber-400/80 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm px-3 py-1 rounded-full">
+              已打完 ✓
+            </span>
+          ) : (
+            <span className="text-2xl md:text-4xl font-black text-green-500/70 dark:text-green-400/70 drop-shadow-sm">✓</span>
+          )}
         </div>
       )}
 

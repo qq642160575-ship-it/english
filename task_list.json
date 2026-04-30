@@ -1,0 +1,92 @@
+{
+  "plan": {
+    "request_type": "complex",
+    "agents_needed": ["direct_fix", "feature", "ux", "ui"],
+    "rationale": "综合需求：包含Bug修复、功能逻辑改动、用户体验优化和视觉调整。需要先处理可以直接修复的问题，再走Feature→UX→UI串行流程。"
+  },
+  "current_phase": "done",
+  "phase_history": [
+    {
+      "phase": "direct_fix",
+      "agent": "orchestrator",
+      "round": 1,
+      "status": "completed",
+      "tasks_completed": 1,
+      "summary": "完成反馈显示时间从1500ms延长到2500ms"
+    },
+    {
+      "phase": "feature",
+      "agent": "feature",
+      "round": 1,
+      "status": "completed",
+      "tasks_completed": 1,
+      "summary": "移除强制退格限制，允许有错的单词完成；错误字母在完成后保持红色高亮+下方正确提示；完成反馈差异化(完美/有错)"
+    },
+    {
+      "phase": "ux_ui",
+      "agent": "ux_ui",
+      "round": 1,
+      "status": "completed",
+      "tasks_completed": 4,
+      "summary": "打字入口引导更醒目(加键盘快捷键提示)→错误提示改为卡片式+文案转向励→新用户侧边栏简化(隐藏SRS/目标/生词本/错词/连续)→章节完成弹窗增加词云回顾(绿/琥珀色标注)"
+    }
+  ],
+  "iteration": 1,
+  "status": "completed",
+  "tasks": [
+    {
+      "id": "fix_002",
+      "title": "完成反馈显示时间过短",
+      "type": "direct_fix",
+      "severity": "medium",
+      "status": "done",
+      "files": ["src/app/page.tsx"],
+      "summary": "completedWordFeedback显示1.5s太短，用户来不及看完词义和拼写"
+    },
+    {
+      "id": "feat_001",
+      "title": "打错字母后允许继续打完单词（非强制退格）",
+      "type": "feature",
+      "severity": "critical",
+      "status": "done",
+      "files": ["src/hooks/use-game-state.ts", "src/app/page.tsx", "src/components/game/typing-area.tsx"],
+      "summary": "当前设计：打错任何字母后不能continue，必须退格修正。改为：允许全部打完，完成后显示正确答案和错误高亮对比。"
+    },
+    {
+      "id": "uxui_001",
+      "title": "非首次用户引导优化 - 打字入口更明显",
+      "type": "ux_ui",
+      "severity": "high",
+      "status": "done",
+      "files": ["src/app/page.tsx", "src/components/game/typing-area.tsx"],
+      "summary": "新用户/非首次用户进入后打字入口不够明显，没有视觉焦点暗示可以打字"
+    },
+    {
+      "id": "uxui_002",
+      "title": "错误提示位置优化 + 文案调整",
+      "type": "ux_ui",
+      "severity": "medium",
+      "status": "done",
+      "files": ["src/app/page.tsx"],
+      "summary": "wordErrorCount>=3的提示可能被底部栏遮挡，文案偏负面"
+    },
+    {
+      "id": "uxui_003",
+      "title": "新用户侧边栏信息密度简化",
+      "type": "ux_ui",
+      "severity": "medium",
+      "status": "done",
+      "files": ["src/app/page.tsx"],
+      "summary": "侧边栏包含学习路径、今日目标、SRS复习、生词本、常错词等，新用户信息过载"
+    },
+    {
+      "id": "uxui_004",
+      "title": "章节完成弹窗增加词云/回顾功能",
+      "type": "ux_ui",
+      "severity": "low",
+      "status": "done",
+      "files": ["src/app/page.tsx"],
+      "summary": "章节完成后弹窗缺少对本章学习成果的直观回顾"
+    }
+  ]
+}

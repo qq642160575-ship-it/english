@@ -80,7 +80,7 @@ export default function Home() {
   const [showIpa, setShowIpa] = useState(true);
   const [milestone, setMilestone] = useState<string | null>(null);
   const showBottomStats = true;
-  const [completedWordFeedback, setCompletedWordFeedback] = useState<{ en: string; zh: string; isSrs?: boolean } | null>(null);
+  const [completedWordFeedback, setCompletedWordFeedback] = useState<{ en: string; zh: string; isSrs?: boolean; hadErrors?: boolean } | null>(null);
   const [srsSessionCorrect, setSrsSessionCorrect] = useState(0);
   const [srsSessionTotal, setSrsSessionTotal] = useState(0);
   const [srsSessionComplete, setSrsSessionComplete] = useState(false);
@@ -266,9 +266,9 @@ export default function Home() {
       setSrsSessionCorrect((c) => c + 1);
     } else {
       const zh = currentItem && "zh" in currentItem ? (currentItem as WordItem).zh : "";
-      setCompletedWordFeedback({ en: currentTarget, zh });
+      setCompletedWordFeedback({ en: currentTarget, zh, hadErrors });
     }
-    setTimeout(() => setCompletedWordFeedback(null), 1500);
+    setTimeout(() => setCompletedWordFeedback(null), 2500);
 
     // Milestone check (non-review mode only)
     if (!isReviewModeRef.current) {
@@ -364,17 +364,11 @@ export default function Home() {
     if (thisCharCorrect) {
       handleCharInputRef.current(char);
       if (soundEnabledRef.current && char !== " " && !isDictationModeRef.current) speakRef.current(prefix);
-      // Only complete when ALL letters typed AND all correct
+      // Complete when ALL letters typed — even with errors
+      // (errors are recorded and shown, but user isn't forced to backspace)
       if (newLen >= s.target.length) {
-        const allCorrect = s.input.every(c => c.correct);
-        if (allCorrect) {
-          prevCompletedRef.current = stateRef.current.completedIndices;
-          completeItemRef.current();
-        } else {
-          // Previous char is wrong — don't complete, show guidance
-          setStuckGuidance("前面有打错的字母，按退格键修正");
-          setTimeout(() => setStuckGuidance(null), 2500);
-        }
+        prevCompletedRef.current = stateRef.current.completedIndices;
+        completeItemRef.current();
       }
       return;
     }
@@ -387,11 +381,9 @@ export default function Home() {
     setTimeout(() => setErrorFlash("none"), 350);
 
     if (newLen >= s.target.length) {
-      // Reached end with error — show gentle guidance
-      setStuckGuidance("按 Backspace 修正，或按 Ctrl+Shift+K 跳过");
-      setTimeout(() => {
-        setStuckGuidance(null);
-      }, 4000);
+      // Reached end with error — still complete, show the result with errors highlighted
+      prevCompletedRef.current = stateRef.current.completedIndices;
+      completeItemRef.current();
     }
   }, []);
 
@@ -771,10 +763,12 @@ export default function Home() {
       if (ctrl && e.shiftKey && e.key === "P") { e.preventDefault(); handleListen(); return; }
       if (ctrl && e.shiftKey && e.key === "K") { e.preventDefault(); handleSkip(); return; }
       if (ctrl && e.shiftKey && e.key === "V") { e.preventDefault(); setShowHint((p) => !p); return; }
+      if (ctrl && e.key === "ArrowLeft") { e.preventDefault(); handlePrevWord(); return; }
+      if (ctrl && e.key === "ArrowRight") { e.preventDefault(); handleNextWord(); return; }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [handleReset, handleListen, handleSkip, setShowHint]);
+  }, [handleReset, handleListen, handleSkip, setShowHint, handlePrevWord, handleNextWord]);
 
   const completedCount = state.completedIndices.length;
   const totalCount = chapterItems.length;
@@ -801,6 +795,7 @@ export default function Home() {
         onWordbookReview={handleWordbookPanel}
         globalErrorCount={globalErrors.errorCount}
         onGlobalErrorReview={handleErrorsPanel}
+        isNewUser={totalCompleted === 0}
       />
 
       <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden">
@@ -1098,15 +1093,33 @@ export default function Home() {
                 "mb-5 px-5 py-2 rounded-full shadow-sm border animate-in fade-in zoom-in-105 duration-300 flex items-center gap-1.5",
                 completedWordFeedback.isSrs
                   ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-700/30"
-                  : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200/50 dark:border-green-700/30"
+                  : completedWordFeedback.hadErrors
+                    ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200/50 dark:border-amber-700/30"
+                    : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200/50 dark:border-green-700/30"
               )}>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
                 {completedWordFeedback.isSrs ? (
-                  <span>{completedWordFeedback.en} ✓ 已掌握！</span>
+                  <>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span>{completedWordFeedback.en} ✓ 已掌握！</span>
+                  </>
+                ) : completedWordFeedback.hadErrors ? (
+                  <>
+                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span>{completedWordFeedback.en}</span>
+                    <span className="text-amber-400 dark:text-amber-500/60">→</span>
+                    <span>{completedWordFeedback.zh || "—"}</span>
+                    <span className="text-[10px] opacity-60 ml-0.5">(有错)</span>
+                  </>
                 ) : (
                   <>
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
                     <span>{completedWordFeedback.en}</span>
                     <span className="text-green-400 dark:text-green-500/60">=</span>
                     <span>{completedWordFeedback.zh || "—"}</span>
@@ -1133,19 +1146,27 @@ export default function Home() {
               </div>
             )}
 
-            {/* Initial typing hint — only show when no other feedback is active */}
+            {/* Initial typing hint — more prominent visual guidance */}
             {!state.isComplete && state.input.length === 0 && !backspaceFeedback && !stuckGuidance && !completedWordFeedback && (
-              <div className="mb-6 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 text-sm font-semibold tracking-wide">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="mb-6 flex flex-col items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm text-zinc-600 dark:text-zinc-300 text-sm font-semibold tracking-wide shadow-sm border border-zinc-200/40 dark:border-zinc-700/40">
+                  <svg className="w-4 h-4 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
                     <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h.01M10 16h.01M14 16h.01"/>
                   </svg>
                   {isDictationMode ? "输入单词的英文拼写" : "按下键盘开始打字"}
                 </div>
-                <span className="text-xs text-zinc-300 dark:text-zinc-600 font-medium">
-                  {isDictationMode ? "完成后会显示正确答案" : "每敲一个字母都会听到发音"}
-                </span>
+                <div className="flex items-center gap-4 text-xs text-zinc-400 dark:text-zinc-500 font-medium">
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 text-[10px] leading-none rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-mono border border-zinc-200 dark:border-zinc-700">字母键</kbd> 打字
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 text-[10px] leading-none rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-mono border border-zinc-200 dark:border-zinc-700">⌫</kbd> 退格修正
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 text-[10px] leading-none rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-mono border border-zinc-200 dark:border-zinc-700">Enter</kbd> 跳过
+                  </span>
+                </div>
               </div>
             )}
 
@@ -1158,6 +1179,7 @@ export default function Home() {
               errorFlash={errorFlash}
               onEmojiClick={() => speak(currentTarget)}
               dictationMode={isDictationMode}
+              hasErrors={state.input.some((c) => !c.correct)}
             />
 
             {/* IPA / Translation */}
@@ -1230,13 +1252,14 @@ export default function Home() {
               </div>
             )}
 
-            {/* Error auto-prompt */}
-            {!state.isComplete && state.wordErrorCount >= 3 && !stuckGuidance && (
-              <div className="mt-3 text-xs text-amber-500 dark:text-amber-400 font-medium animate-in fade-in duration-300 flex items-center gap-1.5">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            {/* Error auto-prompt — repositioned closer to typing area */}
+            {!state.isComplete && state.wordErrorCount >= 3 && (
+              <div className="mt-2 px-4 py-2 rounded-lg bg-amber-50/90 dark:bg-amber-900/20 backdrop-blur-sm border border-amber-200/50 dark:border-amber-700/30 text-xs text-amber-600 dark:text-amber-400 font-medium animate-in fade-in duration-300 flex items-center gap-2 shadow-sm">
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
                 </svg>
-                卡住了？按 <kbd className="px-1 py-[1px] text-[10px] leading-none rounded-[3px] bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-300 font-mono border border-amber-300/50 dark:border-amber-700/50">Enter</kbd> 跳过这个词
+                这个词有点难度，试试按 <kbd className="px-1.5 py-0.5 text-[9px] leading-none rounded-[3px] bg-amber-200/50 dark:bg-amber-800/50 text-amber-700 dark:text-amber-300 font-mono border border-amber-300/50 dark:border-amber-600/50 mx-0.5">Enter</kbd> 跳过，或点「提示」看看
               </div>
             )}
 
@@ -1357,9 +1380,32 @@ export default function Home() {
               <h2 className="text-xl font-[var(--font-display)] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-1">
                 章节完成
               </h2>
-              <p className="text-sm text-zinc-400 dark:text-zinc-500 mb-7">
+              <p className="text-sm text-zinc-400 dark:text-zinc-500 mb-5">
                 {chapters.find((c) => c.chapter === state.chapter)?.title}
               </p>
+
+              {/* Word cloud — show all words with error/perfect status */}
+              {chapterItems.length > 0 && (
+                <div className="mb-5 flex flex-wrap justify-center gap-1.5 max-h-[100px] overflow-y-auto px-1">
+                  {chapterItems.map((item, i) => {
+                    const hadError = state.wrongIndices.includes(i);
+                    return (
+                      <span
+                        key={i}
+                        className={cn(
+                          "text-[10px] px-2 py-0.5 rounded-full font-medium leading-normal",
+                          hadError
+                            ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-200/30 dark:border-amber-700/20"
+                            : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200/30 dark:border-green-700/20"
+                        )}
+                        title={item.en + (hadError ? " (有错)" : " (完美)")}
+                      >
+                        {item.en}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* PRIMARY ACTION only */}
               {(() => {
@@ -1503,6 +1549,9 @@ export default function Home() {
             <ShortcutHint keys={["Ctrl", "Shift", "K"]} label="跳过" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
             <ShortcutHint keys={["Ctrl", "Shift", "V"]} label="提示" />
+            <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
+            <ShortcutHint keys={["Ctrl", "←"]} label="上一个" />
+            <ShortcutHint keys={["Ctrl", "→"]} label="下一个" />
           </div>
         </div>
       </main>
@@ -1553,8 +1602,8 @@ export default function Home() {
 
 // -- Apple-style components --
 
-function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, onShowStats, streak, currentCategory, onCategoryChange, learningPath, srsDueCount, onSRSReview, dailyGoal, wordbookCount, onWordbookReview, globalErrorCount, onGlobalErrorReview }: {
-  collapsed: boolean; currentMode: LearningMode; onModeChange: (m: LearningMode) => void; onToggleCollapse: () => void; onShowStats: () => void; streak: { currentStreak: number; longestStreak: number }; currentCategory: string; onCategoryChange: (catId: string) => void; learningPath: LearningPathResult; srsDueCount: number; onSRSReview: () => void; dailyGoal: ReturnType<typeof useDailyGoal>; wordbookCount: number; onWordbookReview: () => void; globalErrorCount: number; onGlobalErrorReview: () => void;
+function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, onShowStats, streak, currentCategory, onCategoryChange, learningPath, srsDueCount, onSRSReview, dailyGoal, wordbookCount, onWordbookReview, globalErrorCount, onGlobalErrorReview, isNewUser }: {
+  collapsed: boolean; currentMode: LearningMode; onModeChange: (m: LearningMode) => void; onToggleCollapse: () => void; onShowStats: () => void; streak: { currentStreak: number; longestStreak: number }; currentCategory: string; onCategoryChange: (catId: string) => void; learningPath: LearningPathResult; srsDueCount: number; onSRSReview: () => void; dailyGoal: ReturnType<typeof useDailyGoal>; wordbookCount: number; onWordbookReview: () => void; globalErrorCount: number; onGlobalErrorReview: () => void; isNewUser?: boolean;
 }) {
   const { isDark, toggle: toggleTheme } = useTheme();
   const ModeIcon = modeIcons[currentMode];
@@ -1594,8 +1643,8 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         })}
       </div>
 
-      {/* SRS Review badge */}
-      {!collapsed && srsDueCount > 0 && (
+      {/* SRS Review badge (hidden for brand-new users) */}
+      {!collapsed && !isNewUser && srsDueCount > 0 && (
         <div className="shrink-0 px-2.5 pt-3">
           <button
             onClick={onSRSReview}
@@ -1609,8 +1658,8 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         </div>
       )}
 
-      {/* Daily Goal progress */}
-      {!collapsed && (
+      {/* Daily Goal progress (hidden for brand-new users) */}
+      {!collapsed && !isNewUser && (
         <div className="shrink-0 px-2.5 pt-3 animate-stagger-in" style={{ animationDelay: '0ms' }}>
           <div className="px-2 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/50">
             <div className="flex items-center justify-between mb-2">
@@ -1757,8 +1806,8 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         </div>
       )}
 
-      {/* Wordbook */}
-      {!collapsed && (
+      {/* Wordbook (hidden for brand-new users) */}
+      {!collapsed && !isNewUser && (
         <div className="shrink-0 px-2.5 pt-2 animate-stagger-in" style={{ animationDelay: '30ms' }}>
           <button
             onClick={onWordbookReview}
@@ -1778,8 +1827,8 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         </div>
       )}
 
-      {/* Global Errors */}
-      {!collapsed && (
+      {/* Global Errors (hidden for brand-new users) */}
+      {!collapsed && !isNewUser && (
         <div className="shrink-0 px-2.5 pt-1 animate-stagger-in" style={{ animationDelay: '60ms' }}>
           <button
             onClick={onGlobalErrorReview}
@@ -1802,8 +1851,8 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         </div>
       )}
 
-      {/* Streak */}
-      {!collapsed && streak.currentStreak > 0 && (
+      {/* Streak (hidden for brand-new users) */}
+      {!collapsed && !isNewUser && streak.currentStreak > 0 && (
         <div className="shrink-0 px-4 py-2 border-t border-zinc-200/30 dark:border-zinc-800/30">
           <div className="flex items-center gap-2 text-xs">
             <span className="text-amber-500">🔥</span>
@@ -1814,8 +1863,8 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         </div>
       )}
 
-      {/* Collapsed streak */}
-      {collapsed && streak.currentStreak > 0 && (
+      {/* Collapsed streak (hidden for brand-new users) */}
+      {collapsed && !isNewUser && streak.currentStreak > 0 && (
         <div className="shrink-0 flex justify-center py-2 border-t border-zinc-200/30 dark:border-zinc-800/30">
           <span className="text-amber-500 text-sm" title={`连续学习 ${streak.currentStreak} 天`}>🔥</span>
         </div>
