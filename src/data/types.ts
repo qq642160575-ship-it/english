@@ -50,6 +50,7 @@ export interface GameState {
   isComplete: boolean;
   stats: GameStats;
   completedIndices: number[];
+  skippedIndices: number[];
   category: string;
   wrongIndices: number[];
   revealedCount: number;

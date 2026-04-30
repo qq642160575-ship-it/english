@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { ConfettiBurst } from "./confetti-burst";
 import { getWordEmoji, getSentenceEmojis } from "@/data/emoji-map";
 
-type ErrorFlash = "none" | "shake" | "shakeAll";
+type ErrorFlash = "none" | "shake";
 
 interface TypingAreaProps {
   target: string;
@@ -20,9 +20,7 @@ interface TypingAreaProps {
 
 export function TypingArea({ target, input, isComplete, showHint, revealedLetters, errorFlash = "none", onEmojiClick, dictationMode = false }: TypingAreaProps) {
   const len = input.length;
-  const hasError = input.some((c) => !c.correct);
-  const isShaking = errorFlash === "shake" || errorFlash === "shakeAll";
-  const isAllRed = errorFlash === "shakeAll";
+  const isShaking = errorFlash === "shake";
 
   const singleEmoji = !target.includes(" ") ? getWordEmoji(target) : null;
   const sentenceEmojis = target.includes(" ") ? getSentenceEmojis(target) : [];
@@ -54,8 +52,7 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
         className={cn(
           "flex justify-center gap-1.5 flex-wrap items-center text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight transition-[transform,opacity] duration-500",
           isComplete ? "scale-95 opacity-90" : "scale-100",
-          isShaking && "animate-shake",
-          errorFlash === "shakeAll" && "animate-shake-strong"
+          isShaking && "animate-shake"
         )}
       >
         {target.split("").map((ch, i) => {
@@ -84,11 +81,6 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
             colorClass = "text-zinc-400 dark:text-zinc-600 border-b-4 border-zinc-400 dark:border-zinc-600 -mb-4 pb-3 animate-cursor-blink";
           }
 
-          // Override all to red during shakeAll flash
-          if (isAllRed && !isComplete) {
-            colorClass = "text-red-500 dark:text-red-400";
-          }
-
           // Dictation mode: hide untyped characters entirely (no underscores)
           const isHidden = dictationMode && !isTyped && !isRevealed;
           // Spaces show as midpoint dot so user can see them; hide chars when hints off
@@ -108,7 +100,6 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
                 colorClass,
                 !isTyped && !isCurrent && !showHint && "font-black",
                 !isTyped && !isCurrent && showHint && "opacity-30",
-                isAllRed && "opacity-100",
                 isJustTypedCorrect && !isWordEnd && "animate-correct-pop",
                 isWordJustCompleted && "animate-word-done"
               )}
@@ -142,23 +133,8 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
           75% { transform: translateX(-2px); }
           90% { transform: translateX(2px); }
         }
-        @keyframes shake-strong {
-          0%, 100% { transform: translateX(0); }
-          10% { transform: translateX(-8px); }
-          20% { transform: translateX(8px); }
-          30% { transform: translateX(-7px); }
-          40% { transform: translateX(7px); }
-          50% { transform: translateX(-6px); }
-          60% { transform: translateX(6px); }
-          70% { transform: translateX(-4px); }
-          80% { transform: translateX(4px); }
-          90% { transform: translateX(-2px); }
-        }
         .animate-shake {
           animation: shake 0.35s ease-in-out;
-        }
-        .animate-shake-strong {
-          animation: shake-strong 0.5s ease-in-out;
         }
         .animate-cursor-blink {
           animation: cursor-blink 1s step-end infinite;

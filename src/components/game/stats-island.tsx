@@ -14,7 +14,7 @@ export function StatsIsland({ stats, time = "00:00" }: StatsIslandProps) {
   return (
     <div className="flex items-center gap-12 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl px-12 py-4 rounded-3xl">
       <StatItem value={time} label="time" />
-      <StatItem value="0" label="w.p.m" />
+      <StatItem value="—" label="w.p.m" />
       <StatItem value={`${accuracy}`} label="acc." />
       <StatItem value={stats.correct.toString()} label="correct" />
       <StatItem value={stats.errors.toString()} label="errors" />

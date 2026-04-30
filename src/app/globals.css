@@ -58,7 +58,36 @@
   --color-error: #ff453a;
 }
 
+/* Keyboard key colors */
+@utility animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+@utility animate-stagger-in {
+  animation: stagger-in 0.4s ease-out both;
+}
+@utility animate-scale-bounce {
+  animation: scale-bounce 0.3s ease-out;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+  50% { opacity: 0.9; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15); }
+}
+@keyframes stagger-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scale-bounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
 :root {
+  --key-bg: #f0f0f2;
+  --key-text: #1d1d1f;
+  --key-active: #0066cc;
+  --key-active-text: #ffffff;
   --background: #f5f5f7;
   --foreground: #1d1d1f;
   --card: oklch(1 0 0);
@@ -87,6 +116,10 @@
 }
 
 .dark {
+  --key-bg: #2c2c2e;
+  --key-text: #f5f5f7;
+  --key-active: #2997ff;
+  --key-active-text: #ffffff;
   --background: #1d1d1f;
   --foreground: #f5f5f7;
   --card: #1d1d1f;

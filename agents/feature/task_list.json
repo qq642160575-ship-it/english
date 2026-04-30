@@ -1,0 +1,74 @@
+{
+  "current_task": null,
+  "task_queue": [
+    {
+      "id": "add-word-nav-buttons",
+      "title": "添加单词级前后导航按钮（ChevronLeft / ChevronRight）",
+      "description": "在打字区域附近增加可点击的上一个/下一个单词导航按钮，使用 ChevronLeft/ChevronRight 图标",
+      "details": [
+        "在 page.tsx 中创建 prevWord / nextWord 回调函数，使用 loadItem(index, target) 切换单词",
+        "prevWord: 当 state.index > 0 时，加载 state.index - 1 位置的单词",
+        "nextWord: 当 state.index < items.length - 1 时，加载 state.index + 1 位置的单词",
+        "需处理 reviewMode（reviewItems）和普通模式（categoryItems）两种情况",
+        "在 TypingArea 附近或下方添加前一页/后一页按钮组件"
+      ],
+      "acceptance_criteria": [
+        "点击 ChevronLeft 可跳转到上一个单词（非第一章第一个词时）",
+        "点击 ChevronRight 可跳转到下一个单词（非最后一章最后一个词时）",
+        "在第一个词时 ChevronLeft 禁用，最后一个词时 ChevronRight 禁用",
+        "在复习模式和 SRS 模式下同样可用",
+        "切换单词时自动朗读新单词（已有 useEffect 覆盖此逻辑）"
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "update-prev-next-previews-to-buttons",
+      "title": "将已有 Prev/Next word previews 文本改为可点击按钮",
+      "description": "page.tsx 中 834-852 行的 \"Prev / Next word previews\" 区域目前只是被动文本显示，应改为带 Chevron 图标的导航按钮",
+      "details": [
+        "当前 834-852 行使用 div + span 显示前/后单词的文字预览，但不可点击",
+        "改为 button 元素，点击触发 prevWord / nextWord",
+        "保留文字预览功能，但按钮区域应视觉上更突出",
+        "使用 ChevronLeft/ChevronRight 图标配合文字"
+      ],
+      "acceptance_criteria": [
+        "Prev/Next word 预览区域可点击，触发对应导航",
+        "界面上的按钮视觉上明显可辨认为是导航控件",
+        "ChevronLeft/ChevronRight 图标清晰可见"
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "visual-enhancement",
+      "title": "UI 视觉增强 - 让导航按钮更明显",
+      "description": "用户反馈导航按钮不明显，需要增大尺寸、增加对比度、添加悬停/激活效果",
+      "details": [
+        "Chevron 图标从 w-3.5 h-3.5（14px）增大到 w-5 h-5（20px）或更大",
+        "颜色从 text-zinc-400 改为更高对比度",
+        "添加 hover/active 动画效果（已有 active:scale-95）",
+        "添加背景色悬停效果（hover:bg-zinc-100 dark:hover:bg-zinc-800）",
+        "考虑在 TypingArea 正下方或两侧添加专用按钮区域",
+        "可添加 tooltip 或文字标签说明功能"
+      ],
+      "acceptance_criteria": [
+        "导航按钮在页面中一目了然",
+        "悬停时有视觉反馈",
+        "按钮大小适合点击（特别是移动端触摸）"
+      ],
+      "status": "pending"
+    }
+  ],
+  "history": [
+    {
+      "step": 0,
+      "agent": "feature",
+      "result": "分析完成，功能不完整，已列出待办事项"
+    },
+    {
+      "step": 1,
+      "agent": "feature",
+      "result": "实现了单词级前后导航功能：\n1. 在 page.tsx 中 handleSkip 之后添加了 handlePrevWord 和 handleNextWord 两个 useCallback，支持普通模式和复习模式下的单词前后切换，调用 loadItem + cancel + clearWrong。\n2. 将原先仅被动显示的 Prev/Next word previews 区域重构为可点击的 button 组件，使用 ChevronLeft/ChevronRight 图标 + 单词文字预览，保留 showHint 支持。\n3. 按钮在边界时（prev: state.index <= 0, next: state.index >= items.length-1）自动禁用，使用 opacity-30 + cursor-not-allowed 样式。\n4. 使用 cn() 组合 className。\n5. 使用 isReviewMode ? reviewItems : categoryItems 处理不同模式。\n6. 构建验证通过（npx next build 成功）。"
+    }
+  ],
+  "round_summary": "实现了单词级前后导航功能：\n\n## 完成的任务\n\n### Task 1: handlePrevWord / handleNextWord 回调\n在 page.tsx 中 handleSkip（第 570 行）之后添加了两个 useCallback 回调：\n- **handlePrevWord**：当 state.index > 0 时调用 loadItem(ni, items[ni].en) + cancel() + clearWrong()\n- **handleNextWord**：当 state.index < items.length 时调用 loadItem(ni, items[ni].en) + cancel() + clearWrong()\n- 两个回调都通过 isReviewMode 判断使用 reviewItems 还是 categoryItems\n- 切换时调用 clearWrong() 清空错误索引状态\n\n### Task 2: Prev/Next word previews 改为可点击按钮\n原先 852-870 行的被动文本预览（span 元素）完全重构为：\n- 左侧：ChevronLeft 按钮 + 前一个单词文字预览\n- 右侧：后一个单词文字预览 + ChevronRight 按钮\n- 使用 button 元素，onClick 绑定 handlePrevWord/handleNextWord\n- 边界自动禁用（prev: state.index <= 0, next: state.index >= items.length - 1）\n- 禁用态应用 opacity-30 + cursor-not-allowed\n- 使用 cn() 组合样式类\n- 使用 IIFE 提取 items 变量避免重复写三目表达式\n- 保留 showHint 控制显示/隐藏单词字母的功能\n- 复习模式和普通模式均通过 isReviewMode 区分\n\n### Task 3: 语音控制\n确认 page.tsx 中不存在 state.target 变化的自动朗读 useEffect，现有模式是所有 loadItem 调用后均不自动 speak，通过用户输入字符触发语音反馈，或通过 handleListen 手动播放。handlePrevWord/handleNextWord 遵循相同模式，调用 cancel() 停止当前语音。\n\n### 构建验证\nnpx next build 编译成功，TypeScript 检查通过，无错误。"
+}

@@ -1,0 +1,133 @@
+{
+  "current_task": null,
+  "task_queue": [],
+  "history": [
+    {
+      "id": "ux_001",
+      "title": "底部统计栏闪烁：改为永久显示",
+      "status": "done",
+      "summary": "移除 showBottomStats 状态变量和相关逻辑（resetStatsIdle, resetStatsIdleRef, statsIdleRef），移除 auto-hide 3000ms 定时器逻辑，移除所有 resetStatsIdleRef.current() 调用。Stats bar 现在永久显示"
+    },
+    {
+      "id": "ux_002",
+      "title": "错误反馈过激：降低抖动强度，移除全红闪烁",
+      "status": "done",
+      "summary": "移除 shakeAll 逻辑：删除 ErrorFlash 类型中的 shakeAll，移除 typing-area 中 animate-shake-strong 动画和 CSS 关键帧，移除 shakeAll 时将所有字符变红的 isAllRed 逻辑，移除对容器的 animate-shake-strong 类。现在仅单个错误字符变红色，轻 tremor 替代剧烈晃动。shakeAll 相关的 setTimeout 逻辑替换为仅显示 stuckGuidance 温和引导（4000ms）"
+    },
+    {
+      "id": "ux_003",
+      "title": "移动端快捷键不可见：移除 hidden md:block",
+      "status": "done",
+      "summary": "从 shortcut hints div 的 className 中移除 hidden md:block，使快捷键提示在所有屏幕尺寸下均可见"
+    },
+    {
+      "id": "ux_004",
+      "title": "IPA 区域太小：增大字号和点击区域",
+      "status": "done",
+      "summary": "IPA 切换按钮从 text-[10px] px-1.5 py-0.5 增大到 text-xs px-2.5 py-1，添加 border 样式增强可发现性，showIpa 默认改为 true。IPA 文字从 text-sm 增大到 text-base md:text-lg，颜色从 text-zinc-300 提高到 text-zinc-500 增强对比度。布局改为 flex-col 独立行显示，IPA 在中文翻译下方单独一行展示"
+    },
+    {
+      "id": "ux_005",
+      "title": "反馈元素拥挤：统一管理 toast 显示槽位",
+      "status": "done",
+      "summary": "添加互斥规则：milestone 在 completedWordFeedback 显示时隐藏，initialTypingHint 在 backspaceFeedback/stuckGuidance/completedWordFeedback 任一显示时隐藏。确保同一时间最多 2 个反馈层可见，避免视觉叠加"
+    },
+    {
+      "id": "ux_006",
+      "title": "Ctrl+Shift+V 快捷键缺失：在快捷键面板中加入并合并处理",
+      "status": "done",
+      "summary": "在快捷键面板添加 Ctrl+Shift+V 提示项，将独立的 Ctrl+Shift+V useEffect 合并到主键盘快捷键系统中，添加 setShowHint 依赖"
+    },
+    {
+      "id": "ux_007",
+      "title": "提示按钮文本不直观：改为 ??/?/已用完 视觉表示",
+      "status": "done",
+      "summary": "提示按钮文本改为：剩余2次时显示"提示 ??（双问号）"，剩余1次时显示"提示 ?"，用完后显示灰色"提示已用完"并禁用按钮"
+    },
+    {
+      "id": "ux_008",
+      "title": "听写模式切换添加过渡反馈",
+      "status": "done",
+      "summary": "添加 dictationToast 状态和 toast UI，进入听写模式时显示"已切换到听写模式"，退出显示"已退出听写模式"，2500ms 自动消失"
+    },
+    {
+      "id": "ux_009",
+      "title": "收藏按钮添加弹跳过渡动画",
+      "status": "done",
+      "summary": "添加 bookmarkBounce 状态，点击收藏按钮时 Star 图标添加 scale-125 缩放动画（400ms），增强切换反馈"
+    },
+    {
+      "id": "ux_010",
+      "title": "章节完成界面添加全对通过正面反馈",
+      "status": "done",
+      "summary": "MoreActionsButton 中当 hasErrors=false 时显示绿色"本次无错词，完美通过！"徽章替代"复习错词"按钮"
+    },
+    {
+      "id": "ux_011",
+      "title": "SRS复习完成界面添加正确率百分比展示",
+      "status": "done",
+      "summary": "在 SRS 复习完成面板中添加大字百分比显示（text-3xl）和"正确率"标签"
+    },
+    {
+      "id": "ux_012",
+      "title": "复习模式添加视觉区分和退出路径",
+      "status": "done",
+      "summary": "合并 SRS 和普通复习模式指示器（isReviewMode），普通复习使用琥珀色（amber），SRS 使用翠绿色（emerald）。在导航栏添加红色"退出"按钮返回正常模式。添加 handleExitReview 回调"
+    },
+    {
+      "id": "ux_013",
+      "title": "顶部导航栏控件过多：移除 SRS 复习徽章",
+      "status": "done",
+      "summary": "移除顶部导航栏的 SRS 复习 badge（已在侧边栏中有"待复习"按钮），减少导航栏拥挤度"
+    },
+    {
+      "id": "ux_014",
+      "title": "虚拟键盘改为小写并添加正确/错误颜色反馈",
+      "status": "done",
+      "summary": "键盘标签从 k.toUpperCase() 改为小写字母。添加 CharResult[] input prop，计算每个按键的正确/错误状态。KeyboardKey 添加 status prop：正确时绿色背景，错误时红色背景"
+    },
+    {
+      "id": "ux_015",
+      "title": "空数据状态增加插图和恢复默认按钮",
+      "status": "done",
+      "summary": "空状态添加书图标 + 圆形占位背景，说明文案增加提示，添加"恢复默认词库"按钮（清除 localStorage 并跳转到默认词包）"
+    },
+    {
+      "id": "ux_016",
+      "title": "打字过程中音标同步显示不突出",
+      "status": "done",
+      "summary": "已在 ux_004 中完成：showIpa 默认 true，移除 state.input.length > 0 条件，增大字号和对比度，独立行显示"
+    },
+    {
+      "id": "ux_017",
+      "title": "底部章节指示器与统计栏重叠",
+      "status": "done",
+      "summary": "章节指示器 bottom-8 改为 bottom-16 md:bottom-8，确保与永久显示的统计栏保持间距"
+    },
+    {
+      "id": "ux_018",
+      "title": "StatsIsland 中 WPM 硬编码为 0",
+      "status": "done",
+      "summary": "将 WPM 值从 "0" 改为 "—"（未计算标识），避免显示僵尸数据"
+    },
+    {
+      "id": "ux_019",
+      "title": "统计柱状图无数据时全部显示 4% 矮柱",
+      "status": "done",
+      "summary": "新增 last7Days.every(d => d.completed === 0) 判断，全0时显示"尚无数据"占位图标和文本，替代 4% 高度的柱子"
+    },
+    {
+      "id": "ux_020",
+      "title": "虚拟键盘完成状态添加视觉禁用样式",
+      "status": "done",
+      "summary": "VirtualKeyboard 添加 isComplete prop，完成时容器添加 opacity-40 pointer-events-none 类，按键变灰并禁止点击"
+    },
+    {
+      "id": "nav_visibility_fix",
+      "title": "上下单词导航按钮可见性优化（第二轮）",
+      "status": "done",
+      "summary": "UX Agent反馈导航按钮\"显示太不明显了看不到\"。在page.tsx第862-891行实施修复：图标从14px(w-3.5 h-3.5)增大至20px(w-5 h-5)、padding从4px(p-1)增大至8px(p-2)、添加半透明白色容器(bg-white/70 backdrop-blur-sm border rounded-xl shadow-sm px-3 py-1.5)、颜色从zinc-400提升至zinc-500、hover态使用主题蓝色(var(--color-action-blue))、hover背景从5%提升至100%可见(zinc-100)、添加\"上一词\"/\"下一词\"文字标签(text-xs font-medium)、间距从gap-1增至gap-1.5。build验证通过"
+    }
+  ],
+  "round_summary": "第二轮UI实施：针对UX Agent分析的导航按钮可见性缺陷实施全面修复。所有改动在 page.tsx 第862-891行（Prev/Next word previews IIFE块），通过 npx next build 编译验证通过。"
+}

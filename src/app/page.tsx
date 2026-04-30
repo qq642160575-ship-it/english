@@ -22,6 +22,7 @@ import { LearningMode, WordItem, SentenceItem, ChapterMeta, StoredProgress, Dail
 import type { LearningPathResult } from "@/hooks/use-learning-path";
 import type { DayStats } from "@/hooks/use-history-stats";
 import type { WordBookEntry } from "@/hooks/use-wordbook";
+import type { GlobalErrorEntry } from "@/hooks/use-global-errors";
 import { cn } from "@/lib/utils";
 import { RotateCcw, SkipForward, Play, Keyboard, Volume2, VolumeX, Eye, EyeOff, ChevronLeft, ChevronRight, Settings, ListCollapse, Lightbulb, BookA, MessageSquare, Sun, Moon, Star, PenLine } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,7 +37,7 @@ const modeIcons = { word: BookA, sentence: MessageSquare };
 
 export default function Home() {
   const game = useGameState();
-  const { state, handleCharInput, handleBackspace, loadItem, completeItem, skipItem, switchMode, restoreIndices, setCategory, setChapter, reset, clearWrong, revealLetter } = game;
+  const { state, handleCharInput, handleBackspace, loadItem, completeItem, skipItem, addSkipped, clearSkipped, switchMode, restoreIndices, setCategory, setChapter, reset, clearWrong, revealLetter } = game;
   const { speak, cancel, speechRate, setSpeechRate } = useSpeech();
   const { save, load } = useProgress();
   const { recordCompletion, getLast7Days, totalCompleted } = useHistoryStats();
@@ -75,15 +76,17 @@ export default function Home() {
   const [backspaceFeedback, setBackspaceFeedback] = useState<string | null>(null);
   const [stuckGuidance, setStuckGuidance] = useState<string | null>(null);
   const [isSRSReview, setIsSRSReview] = useState(false);
-  const [errorFlash, setErrorFlash] = useState<"none" | "shake" | "shakeAll">("none");
-  const [showIpa, setShowIpa] = useState(false);
+  const [errorFlash, setErrorFlash] = useState<"none" | "shake">("none");
+  const [showIpa, setShowIpa] = useState(true);
   const [milestone, setMilestone] = useState<string | null>(null);
-  const [showBottomStats, setShowBottomStats] = useState(true);
+  const showBottomStats = true;
   const [completedWordFeedback, setCompletedWordFeedback] = useState<{ en: string; zh: string; isSrs?: boolean } | null>(null);
   const [srsSessionCorrect, setSrsSessionCorrect] = useState(0);
   const [srsSessionTotal, setSrsSessionTotal] = useState(0);
   const [srsSessionComplete, setSrsSessionComplete] = useState(false);
   const [goalCelebration, setGoalCelebration] = useState(false);
+  const [dictationToast, setDictationToast] = useState<string | null>(null);
+  const [bookmarkBounce, setBookmarkBounce] = useState(false);
 
   // Detect daily goal completion and show celebration
   const prevAllDoneRef = useRef(dailyGoal.isAllDone);
@@ -95,6 +98,11 @@ export default function Home() {
     prevAllDoneRef.current = dailyGoal.isAllDone;
   }, [dailyGoal.isAllDone]);
   const [isDictationMode, setIsDictationMode] = useState(false);
+  const [showLearnedWords, setShowLearnedWords] = useState(false);
+  const [showWordbookPanel, setShowWordbookPanel] = useState(false);
+  const [showErrorsPanel, setShowErrorsPanel] = useState(false);
+  const [skipCompletedMode, setSkipCompletedMode] = useState(false);
+  const prevSkipCompletedRef = useRef(skipCompletedMode);
 
   // Refs
   const stateRef = useRef(state);
@@ -111,8 +119,6 @@ export default function Home() {
   handleBackspaceRef.current = handleBackspace;
   const soundEnabledRef = useRef(soundEnabled);
   soundEnabledRef.current = soundEnabled;
-  const statsIdleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const resetStatsIdleRef = useRef<() => void>(() => {});
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reviewItemsRef = useRef(reviewItems);
@@ -133,9 +139,31 @@ export default function Home() {
   isDictationModeRef.current = isDictationMode;
   const recordGlobalErrorRef = useRef(globalErrors.recordError);
   recordGlobalErrorRef.current = globalErrors.recordError;
+  const prevCompletedRef = useRef<number[]>([]);
+
+  // When "隐藏已学" is toggled ON, jump from current completed word to next uncompleted
+  useEffect(() => {
+    if (!skipCompletedMode || prevSkipCompletedRef.current) return;
+    prevSkipCompletedRef.current = true;
+    const items = categoryItems;
+    if (items.length === 0 || isReviewMode) return;
+    if (state.completedIndices.includes(state.index) && !state.isComplete) {
+      let ni = state.index + 1;
+      while (ni < items.length && state.completedIndices.includes(ni)) {
+        ni++;
+      }
+      if (ni < items.length) {
+        loadItem(ni, items[ni].en);
+        cancel();
+      }
+    }
+  }, [skipCompletedMode]);
+  // Sync ref
+  useEffect(() => { prevSkipCompletedRef.current = skipCompletedMode; }, [skipCompletedMode]);
 
   const currentItem = (isReviewMode ? reviewItems : categoryItems)[state.index] ?? null;
   const currentTarget = currentItem?.en ?? "";
+  const currentErrorEntry = isReviewMode && !isSRSReview ? globalErrors.errorItems.find((e) => e.en === currentTarget) : null;
   const fullIpa = currentItem
     ? "ipa" in currentItem
       ? currentItem.ipa
@@ -219,6 +247,14 @@ export default function Home() {
   // On complete — immediate 确保完成时打断打字过程中的 TTS
   useEffect(() => {
     if (!state.isComplete || !currentTarget) return;
+
+    // 🛑 Skip all side-effects if this word was already completed (re-completion)
+    if (prevCompletedRef.current.includes(state.index)) {
+      if (soundEnabled) speakRef.current(currentTarget, { rate: COMPLETE_RATE, immediate: true });
+      save(stateRef.current);
+      return;
+    }
+
     // Record word-level stats for history
     const hadErrors = state.wrongIndices.includes(state.index);
     recordCompletion(hadErrors);
@@ -313,17 +349,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.isComplete, currentTarget, soundEnabled, save, clearWrong, recordCompletion, markActive]);
 
-  // Stats bar auto-hide: show on input, hide after 3s idle
-  const resetStatsIdle = useCallback(() => {
-    setShowBottomStats(true);
-    if (statsIdleRef.current) clearTimeout(statsIdleRef.current);
-    statsIdleRef.current = setTimeout(() => setShowBottomStats(false), 3000);
-  }, []);
-  resetStatsIdleRef.current = resetStatsIdle;
-
-  // Keyboard handlers
   const onChar = useCallback((char: string) => {
-    resetStatsIdleRef.current();
     const s = stateRef.current;
     if (s.isComplete || s.input.length >= s.target.length) return;
     const newLen = s.input.length + 1;
@@ -342,6 +368,7 @@ export default function Home() {
       if (newLen >= s.target.length) {
         const allCorrect = s.input.every(c => c.correct);
         if (allCorrect) {
+          prevCompletedRef.current = stateRef.current.completedIndices;
           completeItemRef.current();
         } else {
           // Previous char is wrong — don't complete, show guidance
@@ -353,22 +380,18 @@ export default function Home() {
     }
 
     // --- Wrong character ---
-    // Show red + shake, DON'T complete — force user to backspace
+    // Show error character in red, DON'T complete — force user to backspace
     handleCharInputRef.current(char);
     if (soundEnabledRef.current && !isDictationModeRef.current) speakRef.current(prefix);
     setErrorFlash("shake");
     setTimeout(() => setErrorFlash("none"), 350);
 
     if (newLen >= s.target.length) {
-      // Reached end with error — flash all red and show guidance
+      // Reached end with error — show gentle guidance
+      setStuckGuidance("按 Backspace 修正，或按 Ctrl+Shift+K 跳过");
       setTimeout(() => {
-        setErrorFlash("shakeAll");
-        setStuckGuidance("按 Backspace 修正，或按 Ctrl+Shift+K 跳过");
-      }, 400);
-      setTimeout(() => {
-        setErrorFlash("none");
         setStuckGuidance(null);
-      }, 5000);
+      }, 4000);
     }
   }, []);
 
@@ -383,7 +406,6 @@ export default function Home() {
       advanceRef.current();
       return;
     }
-    resetStatsIdleRef.current();
     if (s.input.length >= s.target.length) return;
     const newLen = s.input.length + 1;
     const prefix = s.target.slice(0, newLen);
@@ -394,7 +416,6 @@ export default function Home() {
   }, []);
 
   const onBackspace = useCallback(() => {
-    resetStatsIdleRef.current();
     const s = stateRef.current;
     // Check if last character was an error — positive feedback on correction
     const lastChar = s.input[s.input.length - 1];
@@ -422,25 +443,33 @@ export default function Home() {
     }
     const items = itemsRef.current;
     cancel();
+    const ci = s.index;
     const nextIndex = s.index + 1;
-    if (nextIndex < items.length) skipItem(nextIndex, items[nextIndex].en);
-  }, [cancel, skipItem]);
+    const isAlreadyCompleted = !isReviewModeRef.current && s.completedIndices.includes(ci);
+    if (nextIndex < items.length) {
+      if (isAlreadyCompleted) {
+        loadItem(nextIndex, items[nextIndex].en);
+      } else {
+        skipItem(ci, nextIndex, items[nextIndex].en);
+      }
+    } else if (!isAlreadyCompleted) {
+      addSkipped(ci);
+    }
+  }, [cancel, skipItem, addSkipped, loadItem]);
 
   useKeyboard({ onChar, onSpace, onBackspace, onEnter, enabled: !state.isComplete && currentItem !== null });
 
-  // Ctrl+Shift+V toggle hints
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "V") {
-        e.preventDefault();
-        setShowHint((p) => !p);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, []);
-
   // Handlers
+  // Find first uncompleted index from a starting point, respecting skipCompletedMode
+  const skipCompleted = useCallback((items: (WordItem | SentenceItem)[], fromIndex: number, completed: number[]): number => {
+    if (!skipCompletedMode || isReviewMode) return fromIndex;
+    let ni = fromIndex;
+    while (ni < items.length && completed.includes(ni)) {
+      ni++;
+    }
+    return ni < items.length ? ni : fromIndex;
+  }, [skipCompletedMode, isReviewMode]);
+
   const handleCategoryChange = useCallback((categoryId: string) => {
     setCategory(categoryId);
     cancel();
@@ -448,13 +477,14 @@ export default function Home() {
     const ch = dataRegistry.getDefaultChapter(categoryId);
     const items = loadChapterItems(categoryId, ch);
     const saved = load(stateRef.current.mode, categoryId, ch);
+    let targetIndex = 0;
     if (saved && items[saved.index]) {
       restoreIndices(saved.index, saved.completedIndices);
-      loadItem(saved.index, items[saved.index].en);
-    } else {
-      loadItem(0, items[0]?.en ?? "");
+      targetIndex = saved.index;
     }
-  }, [cancel, setCategory, load, restoreIndices, loadItem, loadChapterItems]);
+    targetIndex = skipCompleted(items, targetIndex, saved?.completedIndices ?? []);
+    loadItem(targetIndex, items[targetIndex]?.en ?? "");
+  }, [cancel, setCategory, load, restoreIndices, loadItem, loadChapterItems, skipCompleted]);
 
   const handleChapterChange = useCallback((chapter: number) => {
     setChapter(chapter);
@@ -462,15 +492,20 @@ export default function Home() {
     setElapsedSeconds(0);
     const items = loadChapterItems(stateRef.current.category, chapter);
     const saved = load(stateRef.current.mode, stateRef.current.category, chapter);
+    let targetIndex = 0;
     if (saved && items[saved.index]) {
       restoreIndices(saved.index, saved.completedIndices);
-      loadItem(saved.index, items[saved.index].en);
-    } else {
-      loadItem(0, items[0]?.en ?? "");
+      targetIndex = saved.index;
     }
-  }, [cancel, setChapter, load, restoreIndices, loadItem, loadChapterItems]);
+    targetIndex = skipCompleted(items, targetIndex, saved?.completedIndices ?? []);
+    loadItem(targetIndex, items[targetIndex]?.en ?? "");
+  }, [cancel, setChapter, load, restoreIndices, loadItem, loadChapterItems, skipCompleted]);
 
   const handleModeChange = useCallback((mode: LearningMode) => {
+    setIsReviewMode(false);
+    setIsSRSReview(false);
+    setSrsSessionComplete(false);
+    setReviewItems([]);
     const available = dataRegistry.getAvailablePacks(mode);
     const catId = available[0]?.id ?? (mode === "word" ? "basic-words" : "basic-sentences");
     const items = dataRegistry.getItems(catId) as (WordItem | SentenceItem)[];
@@ -548,22 +583,29 @@ export default function Home() {
       packId: state.category,
       addedAt: Date.now(),
     });
+    setBookmarkBounce(true);
+    setTimeout(() => setBookmarkBounce(false), 400);
   }, [currentItem, wordbook, state.category]);
 
-  const handleWordbookReview = useCallback(() => {
-    if (wordbook.entries.length === 0) return;
-    const items = wordbook.entries.map((entry) => ({
+  const startWordbookReview = useCallback((items?: (WordItem | SentenceItem)[]) => {
+    const reviewWords = items ?? wordbook.entries.map((entry) => ({
       en: entry.en,
       zh: entry.zh,
       ipa: entry.ipa ?? "",
       ib: [] as number[],
     }));
+    if (reviewWords.length === 0) return;
     setIsReviewMode(true);
     setIsSRSReview(false);
-    setReviewItems(items);
-    loadItem(0, items[0].en);
+    setReviewItems(reviewWords);
+    loadItem(0, reviewWords[0].en);
     cancel();
   }, [wordbook.entries, loadItem, cancel]);
+
+  const handleWordbookPanel = useCallback(() => {
+    if (wordbook.entries.length === 0) return;
+    setShowWordbookPanel(true);
+  }, [wordbook.entries]);
 
   const getChapterStatus = useCallback((ch: number): "done" | "partial" | "fresh" => {
     const items = dataRegistry.getItemsByChapter(stateRef.current.category, ch);
@@ -581,36 +623,94 @@ export default function Home() {
     return "fresh";
   }, [load]);
 
-  const handleReset = useCallback(() => { cancel(); reset(); setElapsedSeconds(0); loadItem(0, categoryItems[0]?.en ?? ""); }, [cancel, reset, loadItem, categoryItems]);
+  const handleReset = useCallback(() => {
+    cancel();
+    reset();
+    setElapsedSeconds(0);
+    const startIndex = skipCompleted(categoryItems, 0, []);
+    loadItem(startIndex, categoryItems[startIndex]?.en ?? "");
+  }, [cancel, reset, loadItem, categoryItems, skipCompleted]);
   const handleListen = useCallback(() => { if (currentTarget) speak(currentTarget); }, [currentTarget, speak]);
   const handleSkip = useCallback(() => {
     if (state.isComplete) return;
     cancel();
     const items = isReviewMode ? reviewItems : categoryItems;
+    const ci = state.index;
     const ni = state.index + 1;
-    if (ni < items.length) skipItem(ni, items[ni].en);
-  }, [cancel, skipItem, state.index, state.isComplete, categoryItems, reviewItems, isReviewMode]);
+    // Don't track skip if word was already completed
+    const isAlreadyCompleted = !isReviewMode && state.completedIndices.includes(ci);
+    if (ni < items.length) {
+      if (isAlreadyCompleted) {
+        loadItem(ni, items[ni].en);
+      } else {
+        skipItem(ci, ni, items[ni].en);
+      }
+    } else if (ni >= items.length && !isReviewMode && !isAlreadyCompleted) {
+      addSkipped(ci);
+    }
+  }, [cancel, skipItem, addSkipped, loadItem, state.index, state.isComplete, state.completedIndices, categoryItems, reviewItems, isReviewMode]);
+  const handlePrevWord = useCallback(() => {
+    const items = isReviewMode ? reviewItems : categoryItems;
+    let ni = state.index - 1;
+    if (!isReviewMode && skipCompletedMode) {
+      while (ni >= 0 && state.completedIndices.includes(ni)) {
+        ni--;
+      }
+    }
+    if (ni >= 0) {
+      loadItem(ni, items[ni].en);
+      cancel();
+      clearWrong();
+    }
+  }, [isReviewMode, skipCompletedMode, reviewItems, categoryItems, state.index, state.completedIndices, loadItem, cancel, clearWrong]);
+  const handleNextWord = useCallback(() => {
+    const items = isReviewMode ? reviewItems : categoryItems;
+    let ni = state.index + 1;
+    // Skip completed words in skipCompletedMode
+    if (!isReviewMode && skipCompletedMode) {
+      while (ni < items.length && state.completedIndices.includes(ni)) {
+        ni++;
+      }
+    }
+    if (ni < items.length) {
+      loadItem(ni, items[ni].en);
+      cancel();
+      clearWrong();
+    }
+  }, [isReviewMode, skipCompletedMode, reviewItems, categoryItems, state.index, state.completedIndices, loadItem, cancel, clearWrong]);
   const handleKeyPress = useCallback((key: string) => {
     if (key === "backspace") onBackspace();
     else if (key === "space") onSpace();
     else onChar(key);
   }, [onBackspace, onSpace, onChar]);
   const handleSoundToggle = useCallback(() => setSoundEnabled((p) => !p), []);
-  const handleDictationModeToggle = useCallback(() => setIsDictationMode((p) => !p), []);
-  const handleGlobalErrorReview = useCallback(() => {
-    if (globalErrors.errorItems.length === 0) return;
-    const items = globalErrors.errorItems.map((entry) => ({
+  const handleDictationModeToggle = useCallback(() => {
+    setIsDictationMode((p) => {
+      const next = !p;
+      setDictationToast(next ? "已切换到听写模式：只看中文拼写英文" : "已退出听写模式");
+      setTimeout(() => setDictationToast(null), 2500);
+      return next;
+    });
+  }, []);
+  const startErrorsReview = useCallback((items?: (WordItem | SentenceItem)[]) => {
+    const reviewWords = items ?? globalErrors.errorItems.map((entry) => ({
       en: entry.en,
       zh: entry.zh,
       ipa: entry.ipa,
       ib: [] as number[],
     }));
+    if (reviewWords.length === 0) return;
     setIsReviewMode(true);
     setIsSRSReview(false);
-    setReviewItems(items);
-    loadItem(0, items[0].en);
+    setReviewItems(reviewWords);
+    loadItem(0, reviewWords[0].en);
     cancel();
   }, [globalErrors.errorItems, loadItem, cancel]);
+
+  const handleErrorsPanel = useCallback(() => {
+    if (globalErrors.errorItems.length === 0) return;
+    setShowErrorsPanel(true);
+  }, [globalErrors.errorItems]);
   const handleReveal = useCallback(() => {
     const s = stateRef.current;
     if (s.isComplete || s.revealedCount >= 2) return;
@@ -621,6 +721,33 @@ export default function Home() {
       }
     }
   }, [revealLetter]);
+
+  const handleExitReview = useCallback(() => {
+    setIsReviewMode(false);
+    setIsSRSReview(false);
+    setSrsSessionComplete(false);
+    setReviewItems([]);
+    clearWrong();
+    const origItems = loadChapterItems(stateRef.current.category, stateRef.current.chapter);
+    if (origItems.length > 0) loadItem(0, origItems[0].en);
+    cancel();
+  }, [clearWrong, loadItem, loadChapterItems, cancel]);
+
+  const handleReviewSkipped = useCallback(() => {
+    const skippedItems = state.skippedIndices
+      .map((i) => categoryItems[i])
+      .filter(Boolean);
+    if (skippedItems.length === 0) return;
+    setIsReviewMode(true);
+    setReviewItems(skippedItems);
+    clearSkipped();
+    loadItem(0, skippedItems[0].en);
+    cancel();
+  }, [state.skippedIndices, categoryItems, clearSkipped, loadItem, cancel]);
+
+  const handleShowLearnedWords = useCallback(() => {
+    setShowLearnedWords(true);
+  }, []);
 
   const handleShare = useCallback(() => {
     const chapterTitle = chapters.find((c) => c.chapter === state.chapter)?.title ?? `Chapter ${state.chapter}`;
@@ -643,10 +770,11 @@ export default function Home() {
       if (e.key === "Escape" && !ctrl) { e.preventDefault(); handleReset(); return; }
       if (ctrl && e.shiftKey && e.key === "P") { e.preventDefault(); handleListen(); return; }
       if (ctrl && e.shiftKey && e.key === "K") { e.preventDefault(); handleSkip(); return; }
+      if (ctrl && e.shiftKey && e.key === "V") { e.preventDefault(); setShowHint((p) => !p); return; }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [handleReset, handleListen, handleSkip]);
+  }, [handleReset, handleListen, handleSkip, setShowHint]);
 
   const completedCount = state.completedIndices.length;
   const totalCount = chapterItems.length;
@@ -670,9 +798,9 @@ export default function Home() {
         onSRSReview={handleSRSReview}
         dailyGoal={dailyGoal}
         wordbookCount={wordbook.count}
-        onWordbookReview={handleWordbookReview}
+        onWordbookReview={handleWordbookPanel}
         globalErrorCount={globalErrors.errorCount}
-        onGlobalErrorReview={handleGlobalErrorReview}
+        onGlobalErrorReview={handleErrorsPanel}
       />
 
       <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden">
@@ -681,15 +809,31 @@ export default function Home() {
 
         {/* Top frosted nav bar */}
         <nav className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between h-12 px-5 bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-b border-zinc-200/40 dark:border-zinc-800/40">
-          {/* SRS review mode indicator */}
-          {isSRSReview && (
+          {/* Review mode indicator */}
+          {isReviewMode && (
             <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-center h-full pointer-events-none">
-              <span className="px-3 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold tracking-wide flex items-center gap-1">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-                复习模式
-                <span className="opacity-60">{srsSessionCorrect}/{srsSessionTotal}</span>
+              <span className={cn(
+                "px-3 py-0.5 rounded-full text-[10px] font-semibold tracking-wide flex items-center gap-1",
+                isSRSReview
+                  ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+                  : currentErrorEntry
+                    ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
+                    : "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"
+              )}>
+                {currentErrorEntry ? (
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                ) : (
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                )}
+                {currentErrorEntry ? "错词复习" : "复习模式"}
+                {isSRSReview && <span className="opacity-60">{srsSessionCorrect}/{srsSessionTotal}</span>}
+                {currentErrorEntry && (
+                  <span className="opacity-70">· 错 {currentErrorEntry.errorCount} 次</span>
+                )}
               </span>
             </div>
           )}
@@ -723,27 +867,53 @@ export default function Home() {
                 <span className="text-[var(--color-success)]">{completedCount} 完成</span>
               </>
             )}
+            {/* Skip completed mode toggle */}
+            {!isReviewMode && completedCount > 0 && completedCount < totalCount && (
+              <>
+                <span className="text-zinc-300 dark:text-zinc-600 mx-1">·</span>
+                <button
+                  onClick={() => setSkipCompletedMode((v) => !v)}
+                  className={cn(
+                    "text-[11px] font-medium rounded-md px-1.5 py-0.5 transition-all active:scale-95",
+                    skipCompletedMode
+                      ? "text-[var(--color-action-blue)] bg-[var(--color-action-blue)]/10"
+                      : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-400"
+                  )}
+                >
+                  {skipCompletedMode ? "隐藏已学" : "显示已学"}
+                </button>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-1">
-            <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
-
-            {/* SRS review badge (main area, not sidebar-dependent) */}
-            {srs.dueCount > 0 && (
+            {/* Skipped words count */}
+            {!isReviewMode && state.skippedIndices.length > 0 && (
               <button
-                onClick={handleSRSReview}
-                className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all active:scale-95"
+                onClick={handleReviewSkipped}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all active:scale-95"
+                title="复习跳过的词"
               >
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/>
-                  <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
                 </svg>
-                复习
-                <span className="bg-amber-500 text-white text-[9px] font-bold px-1 py-[1px] rounded-full min-w-[16px] text-center leading-tight">
-                  {srs.dueCount > 99 ? "99+" : srs.dueCount}
-                </span>
+                <span>{state.skippedIndices.length}</span>
               </button>
             )}
+            {/* Learned words */}
+            {!isReviewMode && completedCount > 0 && (
+              <button
+                onClick={handleShowLearnedWords}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all active:scale-95"
+                title="查看已学单词"
+              >
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                <span>{completedCount}</span>
+              </button>
+            )}
+            <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
             {/* Sound */}
             <button onClick={handleSoundToggle} className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95">
@@ -802,6 +972,20 @@ export default function Home() {
               <Settings className="w-3.5 h-3.5" />
             </button>
 
+            {/* Exit review mode */}
+            {isReviewMode && (
+              <button
+                onClick={handleExitReview}
+                className="px-2 py-1 rounded-md text-[11px] font-medium text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all active:scale-95 flex items-center gap-1"
+                title="退出复习模式"
+              >
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                退出
+              </button>
+            )}
+
             {/* Reset (compact, secondary) */}
             <button
               onClick={handleReset}
@@ -833,24 +1017,48 @@ export default function Home() {
         )}
 
         {/* Prev / Next word previews */}
-        {categoryItems.length > 0 && (
-          <>
-            {state.index > 0 && categoryItems[state.index - 1] && (
-              <div className="absolute top-[60px] left-5 z-10 max-w-[30vw] truncate">
-                <span className="text-xs font-medium tracking-tight text-zinc-300 dark:text-zinc-700">
-                  {showHint ? categoryItems[state.index - 1].en : categoryItems[state.index - 1].en.split("").map((c) => c === " " ? "·" : "_").join("")}
-                </span>
-              </div>
-            )}
-            {state.index < categoryItems.length - 1 && categoryItems[state.index + 1] && (
-              <div className="absolute top-[60px] right-5 z-10 max-w-[30vw] truncate">
-                <span className="text-xs font-medium tracking-tight text-zinc-300 dark:text-zinc-700">
-                  {showHint ? categoryItems[state.index + 1].en : categoryItems[state.index + 1].en.split("").map((c) => c === " " ? "·" : "_").join("")}
-                </span>
-              </div>
-            )}
-          </>
-        )}
+        {(() => {
+          const items = isReviewMode ? reviewItems : categoryItems;
+          if (items.length === 0) return null;
+          const prevDisabled = state.index <= 0;
+          const nextDisabled = state.index >= items.length - 1;
+          const prevItem = !prevDisabled ? items[state.index - 1] : null;
+          const nextItem = !nextDisabled ? items[state.index + 1] : null;
+          return (
+            <>
+              {prevItem && (
+                <div className="absolute top-[60px] left-5 z-10 flex items-center gap-1.5 max-w-[30vw] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl shadow-sm px-3 py-1.5">
+                  <button
+                    onClick={handlePrevWord}
+                    disabled={prevDisabled}
+                    className={cn("p-2 rounded-md transition-all active:scale-95 text-zinc-500 dark:text-zinc-400 hover:text-[var(--color-action-blue)] dark:hover:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800", prevDisabled && "opacity-30 cursor-not-allowed")}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">上一词</span>
+                  <span className={cn("text-xs font-medium tracking-tight truncate text-zinc-500 dark:text-zinc-400", prevDisabled && "opacity-30")}>
+                    {showHint ? prevItem.en : prevItem.en.split("").map((c) => c === " " ? "·" : "_").join("")}
+                  </span>
+                </div>
+              )}
+              {nextItem && (
+                <div className="absolute top-[60px] right-5 z-10 flex items-center gap-1.5 max-w-[30vw] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-sm border border-zinc-200/50 dark:border-zinc-700/50 rounded-xl shadow-sm px-3 py-1.5">
+                  <span className={cn("text-xs font-medium tracking-tight truncate text-zinc-500 dark:text-zinc-400", nextDisabled && "opacity-30")}>
+                    {showHint ? nextItem.en : nextItem.en.split("").map((c) => c === " " ? "·" : "_").join("")}
+                  </span>
+                  <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500">下一词</span>
+                  <button
+                    onClick={handleNextWord}
+                    disabled={nextDisabled}
+                    className={cn("p-2 rounded-md transition-all active:scale-95 text-zinc-500 dark:text-zinc-400 hover:text-[var(--color-action-blue)] dark:hover:text-blue-400 hover:bg-zinc-100 dark:hover:bg-zinc-800", nextDisabled && "opacity-30 cursor-not-allowed")}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* Center Content */}
         {currentItem ? (
@@ -870,8 +1078,15 @@ export default function Home() {
                 {stuckGuidance}
               </div>
             )}
-            {/* Milestone badge */}
-            {milestone && (
+            {/* Dictation mode toast */}
+            {dictationToast && (
+              <div className="mb-4 px-4 py-2 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-sm font-semibold border border-amber-200/50 dark:border-amber-700/30 animate-in fade-in slide-in-from-top-2 duration-200 flex items-center gap-1.5">
+                <PenLine className="w-3.5 h-3.5" />
+                {dictationToast}
+              </div>
+            )}
+            {/* Milestone badge — hide when completedWordFeedback is showing */}
+            {milestone && !completedWordFeedback && (
               <div className="mb-5 px-6 py-2.5 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm text-zinc-800 dark:text-zinc-200 text-sm font-semibold shadow-lg border border-zinc-200/50 dark:border-zinc-700/50 animate-in fade-in zoom-in-105 duration-300">
                 {milestone}
               </div>
@@ -900,6 +1115,16 @@ export default function Home() {
               </div>
             )}
 
+            {/* Already-completed word badge */}
+            {!isReviewMode && state.completedIndices.includes(state.index) && (
+              <div className="mb-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[10px] font-semibold tracking-wide border border-green-200/50 dark:border-green-700/30">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                已掌握 · 按下一词跳过
+              </div>
+            )}
+
             {/* Dictation mode indicator */}
             {isDictationMode && !state.isComplete && (
               <div className="mb-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-semibold tracking-wide border border-amber-200/50 dark:border-amber-700/30">
@@ -908,8 +1133,8 @@ export default function Home() {
               </div>
             )}
 
-            {/* Initial typing hint (above typing area) */}
-            {!state.isComplete && state.input.length === 0 && (
+            {/* Initial typing hint — only show when no other feedback is active */}
+            {!state.isComplete && state.input.length === 0 && !backspaceFeedback && !stuckGuidance && !completedWordFeedback && (
               <div className="mb-6 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-500">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100/80 dark:bg-zinc-800/80 text-zinc-500 dark:text-zinc-400 text-sm font-semibold tracking-wide">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -936,42 +1161,49 @@ export default function Home() {
             />
 
             {/* IPA / Translation */}
-            <div className="mt-4 text-xl md:text-2xl font-[var(--font-display)] font-medium tracking-tight transition-opacity h-8 flex items-center justify-center gap-2">
-              {state.isComplete ? (
-                <span className="text-[var(--color-success)]/70 font-mono text-base">/{fullIpa}/</span>
-              ) : (
-                <>
-                  <span className="text-zinc-500 dark:text-zinc-400 text-base font-sans">{currentItem.zh || fullIpa}</span>
-                  <button
-                    onClick={() => setShowIpa(!showIpa)}
-                    className={cn(
-                      "text-[10px] px-1.5 py-0.5 rounded font-mono transition-all",
-                      showIpa
-                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500"
-                        : "text-zinc-300 dark:text-zinc-600 hover:text-zinc-400 dark:hover:text-zinc-500"
-                    )}
-                  >
-                    {showIpa ? "IPA" : "/pa/"}
-                  </button>
-                  {showIpa && state.input.length > 0 && ipaResult.ipa && (
-                    <div className="flex items-center gap-2 text-sm text-zinc-300 dark:text-zinc-600">
-                      <span className="font-light">&rarr;</span>
-                      <span className="text-zinc-400 dark:text-zinc-500 font-mono">/{ipaResult.ipa}/</span>
-                    </div>
-                  )}
-                </>
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <div className="text-xl md:text-2xl font-[var(--font-display)] font-medium tracking-tight transition-opacity flex items-center justify-center gap-2">
+                {state.isComplete ? (
+                  <span className="text-[var(--color-success)]/70 font-mono text-base">/{fullIpa}/</span>
+                ) : (
+                  <>
+                    <span className="text-zinc-500 dark:text-zinc-400 text-base font-sans">{currentItem.zh || fullIpa}</span>
+                    <button
+                      onClick={() => setShowIpa(!showIpa)}
+                      className={cn(
+                        "text-xs px-2.5 py-1 rounded font-mono transition-all border border-zinc-200/50 dark:border-zinc-700/50",
+                        showIpa
+                          ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
+                          : "bg-transparent text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-600 dark:hover:text-zinc-400"
+                      )}
+                    >
+                      {showIpa ? "IPA" : "/pa/"}
+                    </button>
+                  </>
+                )}
+              </div>
+              {showIpa && ipaResult.ipa && (
+                <div className="flex items-center gap-2 text-base md:text-lg text-zinc-500 dark:text-zinc-400 font-mono tracking-tight">
+                  <span className="font-light text-zinc-300 dark:text-zinc-600">&rarr;</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 font-mono">/{ipaResult.ipa}/</span>
+                </div>
               )}
             </div>
 
-            {/* Bookmark star */}
-            {currentItem && !state.isComplete && (
+            {/* Bookmark star — always visible */}
+            {currentItem && (
               <div className="mt-4 flex items-center justify-center">
                 <button
                   onClick={handleBookmarkToggle}
-                  className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95 px-2 py-1 rounded-full hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs transition-all active:scale-95 px-2 py-1 rounded-full",
+                    wordbook.isBookmarked(currentTarget)
+                      ? "text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                      : "text-zinc-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10"
+                  )}
                   title={wordbook.isBookmarked(currentTarget) ? '从生词本移除' : '添加到生词本'}
                 >
-                  <Star className={cn("w-3.5 h-3.5 transition-all", wordbook.isBookmarked(currentTarget) && "fill-amber-500 text-amber-500")} />
+                  <Star className={cn("w-3.5 h-3.5 transition-all duration-200", wordbook.isBookmarked(currentTarget) && "fill-amber-500 text-amber-500", bookmarkBounce && "scale-125")} />
                   <span>{wordbook.isBookmarked(currentTarget) ? '已收藏' : '收藏'}</span>
                 </button>
               </div>
@@ -1017,7 +1249,11 @@ export default function Home() {
                 </AppleActionButton>
                 <AppleActionButton onClick={handleReveal} variant="secondary" disabled={state.revealedCount >= 2}>
                   <Lightbulb className="w-3.5 h-3.5" />
-                  提示 {2 - state.revealedCount}
+                  {state.revealedCount >= 2 ? (
+                    <span className="text-zinc-400 dark:text-zinc-500">提示已用完</span>
+                  ) : (
+                    <>提示 {Array(2 - state.revealedCount).fill("?").join("")}</>
+                  )}
                 </AppleActionButton>
                 <AppleActionButton onClick={handleSkip} variant="primary" disabled={false}>
                   跳过
@@ -1029,22 +1265,43 @@ export default function Home() {
             {/* Virtual Keyboard */}
             {showKeyboard && (
               <div className="mt-10 w-full max-w-3xl">
-                <VirtualKeyboard activeKey={activeKey} onKeyPress={handleKeyPress} />
+                <VirtualKeyboard activeKey={activeKey} onKeyPress={handleKeyPress} input={state.input} isComplete={state.isComplete} />
               </div>
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-4 text-zinc-400 font-medium">
-            <span className="text-sm">当前词库没有内容</span>
-            <button onClick={() => setShowDataManager(true)} className="px-5 py-2 bg-[var(--color-action-blue)] text-white text-sm font-medium rounded-full hover:brightness-110 transition-all active:scale-95">
-              导入词库
-            </button>
+          <div className="flex flex-col items-center gap-5 text-zinc-400 font-medium">
+            <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+              <svg className="w-7 h-7 text-zinc-300 dark:text-zinc-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 016.5 2H20v20H6.5a2.5 2.5 0 010-5H20"/>
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">当前词库没有内容</p>
+              <p className="text-xs text-zinc-300 dark:text-zinc-600 mt-1">您可以导入自己的词库文件，或恢复默认词库</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setShowDataManager(true)} className="px-5 py-2 bg-[var(--color-action-blue)] text-white text-sm font-medium rounded-full hover:brightness-110 transition-all active:scale-95">
+                导入词库
+              </button>
+              <button
+                onClick={() => {
+                  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+                  const defaultPack = dataRegistry.getDefaultPackId(state.mode);
+                  const defaultChapter = dataRegistry.getDefaultChapter(defaultPack);
+                  handleCategoryChange(defaultPack);
+                }}
+                className="px-5 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-sm font-medium rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-95"
+              >
+                恢复默认词库
+              </button>
+            </div>
           </div>
         )}
 
         {/* Chapter indicators at bottom */}
         {chapters.length > 1 && (
-          <div className="absolute bottom-8 flex items-center gap-2 z-10">
+          <div className="absolute bottom-16 md:bottom-8 flex items-center gap-2 z-10">
             {chapters.map((ch) => {
               const status = getChapterStatus(ch.chapter);
               const isActive = ch.chapter === state.chapter;
@@ -1148,6 +1405,18 @@ export default function Home() {
 
               {/* Foldable more actions */}
               <div className="mt-6 pt-4 border-t border-zinc-200/30 dark:border-zinc-800/30">
+                {/* Review skipped words — show before other actions */}
+                {state.skippedIndices.length > 0 && (
+                  <button
+                    onClick={handleReviewSkipped}
+                    className="w-full mb-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[11px] font-semibold rounded-full hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-1"
+                  >
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
+                    </svg>
+                    复习跳过的词 ({state.skippedIndices.length})
+                  </button>
+                )}
                 <MoreActionsButton
                   hasErrors={state.wrongIndices.length > 0}
                   errorCount={state.wrongIndices.length}
@@ -1176,9 +1445,17 @@ export default function Home() {
               <h2 className="text-xl font-[var(--font-display)] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight mb-1">
                 复习完成
               </h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
                 本次复习 <span className="font-semibold text-emerald-500">{srsSessionCorrect}</span> / <span className="font-semibold">{srsSessionTotal}</span> 个词已掌握 ✓
               </p>
+              {srsSessionTotal > 0 && (
+                <div className="mb-6">
+                  <div className="text-3xl font-bold text-emerald-500 dark:text-emerald-400 tabular-nums">
+                    {Math.round((srsSessionCorrect / srsSessionTotal) * 100)}%
+                  </div>
+                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-widest mt-0.5">正确率</p>
+                </div>
+              )}
               <button
                 onClick={() => setSrsSessionComplete(false)}
                 className="w-full py-3 bg-[var(--color-action-blue)] text-white text-sm font-semibold rounded-full hover:brightness-110 transition-all active:scale-95"
@@ -1192,7 +1469,7 @@ export default function Home() {
         {/* Stats bar (bottom frosted) */}
         <div className={cn(
           "absolute bottom-0 left-0 right-0 z-10 transition-all duration-500",
-          isChapterComplete || !showBottomStats ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100"
+          isChapterComplete ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100"
         )}>
           <div className="flex items-center justify-center gap-8 bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-t border-zinc-200/40 dark:border-zinc-800/40 px-4 py-3">
             <StatItem value={formatTime(elapsedSeconds)} label="耗时" />
@@ -1212,7 +1489,7 @@ export default function Home() {
 
         {/* Shortcuts hint (bottom-right) */}
         <div className={cn(
-          "absolute bottom-14 right-5 z-10 transition-all duration-300 hidden md:block",
+          "absolute bottom-14 right-5 z-10 transition-all duration-300",
           isChapterComplete ? "opacity-0" : "opacity-100"
         )}>
           <div className="flex items-center gap-2 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm px-2.5 py-1.5 rounded-lg border border-zinc-200/30 dark:border-zinc-800/30">
@@ -1224,11 +1501,40 @@ export default function Home() {
             <ShortcutHint keys={["Ctrl", "Shift", "P"]} label="发音" />
             <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
             <ShortcutHint keys={["Ctrl", "Shift", "K"]} label="跳过" />
+            <span className="text-zinc-200 dark:text-zinc-700 text-[9px]">|</span>
+            <ShortcutHint keys={["Ctrl", "Shift", "V"]} label="提示" />
           </div>
         </div>
       </main>
 
       <DataManager open={showDataManager} onOpenChange={setShowDataManager} onPacksChanged={handlePacksChanged} />
+
+      {showLearnedWords && (
+        <LearnedWordsPanel
+          items={chapterItems}
+          completedIndices={state.completedIndices}
+          onClose={() => setShowLearnedWords(false)}
+        />
+      )}
+
+      {showWordbookPanel && (
+        <WordbookPanel
+          entries={wordbook.entries}
+          onStartReview={startWordbookReview}
+          onRemove={(en) => wordbook.removeEntry(en)}
+          onClose={() => setShowWordbookPanel(false)}
+        />
+      )}
+
+      {showErrorsPanel && (
+        <ErrorsPanel
+          errorItems={globalErrors.errorItems}
+          onStartReview={startErrorsReview}
+          onClear={(en, packId) => globalErrors.clearError(en, packId)}
+          onClearAll={() => globalErrors.clearAll()}
+          onClose={() => setShowErrorsPanel(false)}
+        />
+      )}
 
       {showStats && (
         <StatsPanel
@@ -1256,7 +1562,7 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
 
   return (
     <div className={cn(
-      "flex flex-col h-full bg-white/80 dark:bg-zinc-950/80 backdrop-blur border-r border-zinc-200/40 dark:border-zinc-800/40 transition-[width,transform] duration-300 z-20 absolute lg:relative",
+      "flex flex-col h-full bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl border-r border-zinc-200/30 dark:border-zinc-800/30 transition-all duration-[350ms] ease-[cubic-bezier(0.32,0.72,0,1)] z-20 absolute lg:relative shadow-[1px_0_8px_rgba(0,0,0,0.04)] dark:shadow-[1px_0_8px_rgba(0,0,0,0.2)]",
       collapsed ? "-translate-x-full lg:translate-x-0 lg:w-[72px]" : "translate-x-0 w-[220px]"
     )}>
       {/* Logo area */}
@@ -1265,7 +1571,7 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
       </div>
 
       {/* Mode switches */}
-      <div className="shrink-0 px-2.5 pt-4">
+      <div className="shrink-0 px-2.5 pt-4 animate-stagger-in" style={{ animationDelay: '0ms' }}>
         {(["word", "sentence"] as LearningMode[]).map((mode) => {
           const Icon = modeIcons[mode];
           const active = mode === currentMode;
@@ -1274,9 +1580,9 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
               key={mode}
               onClick={() => onModeChange(mode)}
               className={cn(
-                "flex items-center w-full px-2.5 py-2 rounded-lg text-xs font-medium transition-all active:scale-[0.98]",
+                "flex items-center w-full px-2.5 py-2 rounded-lg text-xs font-medium transition-all duration-200 active:scale-[0.97]",
                 active
-                  ? "bg-[var(--color-action-blue)]/10 text-[var(--color-action-blue)] font-semibold"
+                  ? "bg-[var(--color-action-blue)]/10 text-[var(--color-action-blue)] font-semibold shadow-[inset_0_0_0_1px_rgba(0,102,204,0.12)] dark:shadow-[inset_0_0_0_1px_rgba(41,151,255,0.15)]"
                   : "text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5",
                 collapsed ? "justify-center" : "justify-start gap-2.5"
               )}
@@ -1293,7 +1599,7 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
         <div className="shrink-0 px-2.5 pt-3">
           <button
             onClick={onSRSReview}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all active:scale-[0.98]"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-all duration-200 active:scale-[0.97] animate-pulse-subtle"
           >
             <span>📝 待复习</span>
             <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
@@ -1305,7 +1611,7 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
 
       {/* Daily Goal progress */}
       {!collapsed && (
-        <div className="shrink-0 px-2.5 pt-3">
+        <div className="shrink-0 px-2.5 pt-3 animate-stagger-in" style={{ animationDelay: '0ms' }}>
           <div className="px-2 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800/50">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">今日目标</span>
@@ -1391,12 +1697,13 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
             学习路径
           </h4>
           <div className="space-y-0.5">
-            {learningPath.path.map((entry) => (
+            {learningPath.path.map((entry, i) => (
               <button
                 key={entry.packId}
                 onClick={() => onCategoryChange(entry.packId)}
+                style={{ animationDelay: `${i * 30}ms` }}
                 className={cn(
-                  "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-all text-left",
+                  "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs transition-all duration-200 text-left animate-stagger-in",
                   entry.packId === currentCategory
                     ? "bg-[var(--color-action-blue)]/10 text-[var(--color-action-blue)] font-medium"
                     : entry.allDone
@@ -1429,17 +1736,18 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
       {/* Collapsed mode: compact icons */}
       {collapsed && currentMode === "word" && (
         <div className="flex-1 flex flex-col items-center gap-1 px-1 pt-4 overflow-y-auto min-h-0">
-          {learningPath.path.map((entry) => (
+          {learningPath.path.map((entry, i) => (
             <button
               key={entry.packId}
               onClick={() => onCategoryChange(entry.packId)}
+              style={{ animationDelay: `${i * 30}ms` }}
               className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all shrink-0",
+                "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all duration-200 shrink-0 animate-stagger-in",
                 entry.allDone
                   ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
                   : entry.packId === currentCategory
                     ? "bg-[var(--color-action-blue)] text-white"
-                    : "bg-zinc-200 dark:bg-zinc-700 text-zinc-500 hover:bg-zinc-300 dark:hover:bg-zinc-600"
+                    : "bg-zinc-200 dark:bg-zinc-700 text-zinc-500 hover:bg-zinc-300 dark:hover:bg-zinc-600 hover:scale-110 active:scale-95"
               )}
               title={`${entry.name} (${entry.completed}/${entry.total})`}
             >
@@ -1451,11 +1759,11 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
 
       {/* Wordbook */}
       {!collapsed && (
-        <div className="shrink-0 px-2.5 pt-2">
+        <div className="shrink-0 px-2.5 pt-2 animate-stagger-in" style={{ animationDelay: '30ms' }}>
           <button
             onClick={onWordbookReview}
             disabled={wordbookCount === 0}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all active:scale-[0.98] text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 active:scale-[0.97] text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <span className="flex items-center gap-2">
               <BookA className="w-3.5 h-3.5" />
@@ -1472,11 +1780,11 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
 
       {/* Global Errors */}
       {!collapsed && (
-        <div className="shrink-0 px-2.5 pt-1">
+        <div className="shrink-0 px-2.5 pt-1 animate-stagger-in" style={{ animationDelay: '60ms' }}>
           <button
             onClick={onGlobalErrorReview}
             disabled={globalErrorCount === 0}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all active:scale-[0.98] text-zinc-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 active:scale-[0.97] text-zinc-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <span className="flex items-center gap-2">
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1514,21 +1822,21 @@ function AppleSidebar({ collapsed, currentMode, onModeChange, onToggleCollapse, 
       )}
 
       {/* Bottom controls */}
-      <div className="shrink-0 px-3 pb-3 pt-2 border-t border-zinc-200/30 dark:border-zinc-800/30 flex flex-col gap-1">
+      <div className="shrink-0 px-3 pb-3 pt-2 border-t border-zinc-200/30 dark:border-zinc-800/30 flex flex-col gap-1 animate-stagger-in" style={{ animationDelay: '90ms' }}>
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center justify-center py-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95 gap-2"
+          className="w-full flex items-center justify-center py-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all duration-200 active:scale-95 gap-2"
         >
           {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           {!collapsed && <span className="text-xs">{isDark ? "浅色模式" : "深色模式"}</span>}
         </button>
-        <button onClick={onShowStats} className="w-full flex items-center justify-center py-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95 gap-2">
+        <button onClick={onShowStats} className="w-full flex items-center justify-center py-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all duration-200 active:scale-95 gap-2">
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
           </svg>
           {!collapsed && <span className="text-xs">学习统计</span>}
         </button>
-        <button onClick={onToggleCollapse} className="w-full flex items-center justify-center py-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95">
+        <button onClick={onToggleCollapse} className="w-full flex items-center justify-center py-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all duration-200 active:scale-95">
           <ListCollapse className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -1593,7 +1901,7 @@ function MoreActionsButton({ hasErrors, errorCount, onReviewWrong, onReviewAll, 
       </button>
       {open && (
         <div className="mt-3 flex flex-col gap-1.5 w-full animate-in fade-in slide-in-from-top-2 duration-200">
-          {hasErrors && (
+          {hasErrors ? (
             <button onClick={onReviewWrong} className="w-full px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[11px] font-semibold rounded-full hover:brightness-110 transition-all active:scale-95 flex items-center justify-center gap-1">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
@@ -1601,6 +1909,13 @@ function MoreActionsButton({ hasErrors, errorCount, onReviewWrong, onReviewAll, 
               </svg>
               复习错词 ({errorCount})
             </button>
+          ) : (
+            <div className="w-full px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[11px] font-semibold rounded-full flex items-center justify-center gap-1">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+              本次无错词，完美通过！
+            </div>
           )}
           <button onClick={onReviewAll} className="w-full px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-[11px] font-semibold rounded-full hover:brightness-110 transition-all active:scale-95">
             复习全章（打乱顺序）
@@ -1641,6 +1956,16 @@ function StatsPanel({ last7Days, totalCompleted, onClose }: { last7Days: DayStat
         </p>
 
         {/* 7-day bar chart */}
+        {last7Days.every((d) => d.completed === 0) ? (
+          <div className="flex items-center justify-center h-32 mb-2 text-zinc-300 dark:text-zinc-600">
+            <div className="flex flex-col items-center gap-1">
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+              </svg>
+              <span className="text-[11px] font-medium">尚无数据</span>
+            </div>
+          </div>
+        ) : (
         <div className="flex items-end justify-between gap-2 h-32 mb-2 px-1">
           {last7Days.map((day) => {
             const pct = maxCompleted > 0 ? (day.completed / maxCompleted) * 100 : 0;
@@ -1659,6 +1984,7 @@ function StatsPanel({ last7Days, totalCompleted, onClose }: { last7Days: DayStat
             );
           })}
         </div>
+        )}
 
         {/* Word-level summary */}
         <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-zinc-200/40 dark:border-zinc-800/40">
@@ -1692,6 +2018,276 @@ function StatsPanel({ last7Days, totalCompleted, onClose }: { last7Days: DayStat
         >
           关闭
         </button>
+      </div>
+    </div>
+  );
+}
+
+// -- Learned Words Panel --
+
+function LearnedWordsPanel({ items, completedIndices, onClose }: {
+  items: (WordItem | SentenceItem)[]; completedIndices: number[]; onClose: () => void;
+}) {
+  const learnedItems = completedIndices
+    .map((i) => ({ index: i, item: items[i] }))
+    .filter((e) => e.item);
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-zinc-900 rounded-2xl px-6 py-6 max-w-md w-full mx-4 shadow-xl border border-zinc-200/50 dark:border-zinc-800/50 max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <h2 className="text-base font-[var(--font-display)] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+            已学单词
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        {learnedItems.length === 0 ? (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500 text-center py-8">还没有已学的单词</p>
+        ) : (
+          <div className="overflow-y-auto space-y-1 flex-1 min-h-0">
+            {learnedItems.map(({ index, item }) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800"
+              >
+                <span className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
+                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                    {item.en}
+                  </div>
+                  <div className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">
+                    {"zh" in item ? item.zh : ""}
+                    {"ipa" in item && item.ipa ? ` /${item.ipa}/` : ""}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          onClick={onClose}
+          className="mt-4 w-full py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-full hover:brightness-110 transition-all active:scale-95 shrink-0"
+        >
+          关闭
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// -- Wordbook Panel --
+
+function WordbookPanel({ entries, onStartReview, onRemove, onClose }: {
+  entries: WordBookEntry[]; onStartReview: (items?: (WordItem | SentenceItem)[]) => void; onRemove: (en: string) => void; onClose: () => void;
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleSelected = (en: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(en)) next.delete(en); else next.add(en);
+      return next;
+    });
+  };
+
+  const handleReviewSelected = () => {
+    const items = entries
+      .filter((e) => selected.has(e.en))
+      .map((e) => ({ en: e.en, zh: e.zh, ipa: e.ipa ?? "", ib: [] as number[] }));
+    if (items.length === 0) onStartReview();
+    else onStartReview(items);
+    onClose();
+  };
+
+  const handleReviewAll = () => { onStartReview(); onClose(); };
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-zinc-900 rounded-2xl px-6 py-6 max-w-md w-full mx-4 shadow-xl border border-zinc-200/50 dark:border-zinc-800/50 max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <h2 className="text-base font-[var(--font-display)] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight flex items-center gap-2">
+            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+            生词本
+          </h2>
+          <button onClick={onClose} className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mb-3">{entries.length} 个词 · 点击可选择指定词复习</p>
+
+        {entries.length === 0 ? (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500 text-center py-8">生词本为空，点击收藏按钮添加单词</p>
+        ) : (
+          <div className="overflow-y-auto space-y-1 flex-1 min-h-0">
+            {entries.map((entry) => (
+              <div
+                key={entry.en}
+                onClick={() => toggleSelected(entry.en)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg border transition-all cursor-pointer",
+                  selected.has(entry.en)
+                    ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200/50 dark:border-amber-700/30"
+                    : "bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700/50"
+                )}
+              >
+                <div className={cn(
+                  "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
+                  selected.has(entry.en)
+                    ? "bg-amber-500 border-amber-500 text-white"
+                    : "border-zinc-300 dark:border-zinc-600"
+                )}>
+                  {selected.has(entry.en) && (
+                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">{entry.en}</div>
+                  <div className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">
+                    {entry.zh}{entry.ipa ? ` /${entry.ipa}/` : ""}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onRemove(entry.en); }}
+                  className="p-1 rounded text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shrink-0"
+                  title="移除"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 6L6 18"/><path d="m6 6 12 12"/>
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 shrink-0 flex items-center gap-2">
+          <button
+            onClick={handleReviewAll}
+            disabled={entries.length === 0}
+            className="flex-1 py-2 bg-[var(--color-action-blue)] text-white text-sm font-medium rounded-full hover:brightness-110 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            复习全部
+          </button>
+          {selected.size > 0 && (
+            <button
+              onClick={handleReviewSelected}
+              className="flex-1 py-2 bg-amber-500 text-white text-sm font-medium rounded-full hover:brightness-110 transition-all active:scale-95"
+            >
+              复习已选 ({selected.size})
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -- Global Errors Panel --
+
+function ErrorsPanel({ errorItems, onStartReview, onClear, onClearAll, onClose }: {
+  errorItems: GlobalErrorEntry[]; onStartReview: (items?: (WordItem | SentenceItem)[]) => void; onClear: (en: string, packId: string) => void; onClearAll: () => void; onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/5 dark:bg-white/5 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-zinc-900 rounded-2xl px-6 py-6 max-w-md w-full mx-4 shadow-xl border border-zinc-200/50 dark:border-zinc-800/50 max-h-[80vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <h2 className="text-base font-[var(--font-display)] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight flex items-center gap-2">
+            <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            常错词
+          </h2>
+          <button onClick={onClose} className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mb-3">按出错次数排序 · 可逐条清除</p>
+
+        {errorItems.length === 0 ? (
+          <p className="text-sm text-zinc-400 dark:text-zinc-500 text-center py-8">暂无出错记录</p>
+        ) : (
+          <div className="overflow-y-auto space-y-1 flex-1 min-h-0">
+            {errorItems.map((entry, i) => {
+              const id = `${entry.packId}::${entry.en}`;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800"
+                >
+                  <span className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400 flex items-center justify-center shrink-0 text-[10px] font-bold">
+                    {entry.errorCount}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate flex items-center gap-2">
+                      {entry.en}
+                      <span className="text-[9px] text-zinc-400 dark:text-zinc-500 font-normal">#{i + 1}</span>
+                    </div>
+                    <div className="text-[11px] text-zinc-400 dark:text-zinc-500 truncate">
+                      {entry.zh}{entry.ipa ? ` /${entry.ipa}/` : ""}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onClear(entry.en, entry.packId)}
+                    className="p-1 rounded text-zinc-300 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all shrink-0"
+                    title="清除此条"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-4 shrink-0 flex items-center gap-2">
+          <button
+            onClick={() => { onStartReview(); onClose(); }}
+            disabled={errorItems.length === 0}
+            className="flex-1 py-2 bg-[var(--color-action-blue)] text-white text-sm font-medium rounded-full hover:brightness-110 transition-all active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            复习全部
+          </button>
+          {errorItems.length > 0 && (
+            <button
+              onClick={() => { onClearAll(); }}
+              className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 text-sm font-medium rounded-full hover:brightness-110 transition-all active:scale-95"
+            >
+              清空全部
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

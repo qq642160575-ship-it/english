@@ -14,7 +14,10 @@ type GameAction =
   | { type: "SET_CHAPTER"; chapter: number }
   | { type: "RESET" }
   | { type: "CLEAR_WRONG" }
-  | { type: "REVEAL_LETTER"; pos: number };
+  | { type: "REVEAL_LETTER"; pos: number }
+  | { type: "ADD_SKIPPED"; index: number }
+  | { type: "CLEAR_SKIPPED" }
+  | { type: "REMOVE_SKIPPED"; index: number };
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -109,11 +112,24 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         index: action.index,
         completedIndices: action.completedIndices,
+        skippedIndices: state.skippedIndices,
       };
     case "SET_CATEGORY":
       return { ...state, category: action.category, chapter: 1, index: 0, input: [], isComplete: false, completedIndices: [], stats: { letters: 0, correct: 0, errors: 0 }, wordErrorCount: 0 };
     case "SET_CHAPTER":
       return { ...state, chapter: action.chapter, index: 0, input: [], isComplete: false, completedIndices: [], stats: { letters: 0, correct: 0, errors: 0 }, wordErrorCount: 0 };
+    case "ADD_SKIPPED": {
+      const newSkipped = state.skippedIndices.includes(action.index)
+        ? state.skippedIndices
+        : [...state.skippedIndices, action.index];
+      return { ...state, skippedIndices: newSkipped };
+    }
+    case "CLEAR_SKIPPED":
+      return { ...state, skippedIndices: [] };
+    case "REMOVE_SKIPPED": {
+      const filteredSkipped = state.skippedIndices.filter((i) => i !== action.index);
+      return { ...state, skippedIndices: filteredSkipped };
+    }
     case "CLEAR_WRONG":
       return { ...state, wrongIndices: [] };
     case "RESET":
@@ -124,6 +140,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         isComplete: false,
         stats: { letters: 0, correct: 0, errors: 0 },
         completedIndices: [],
+        skippedIndices: [],
         wrongIndices: [],
         wordErrorCount: 0,
       };
@@ -141,6 +158,7 @@ const initialState: GameState = {
   isComplete: false,
   stats: { letters: 0, correct: 0, errors: 0 },
   completedIndices: [],
+  skippedIndices: [],
   category: "basic-words",
   wrongIndices: [],
   revealedCount: 0,
@@ -167,8 +185,21 @@ export function useGameState() {
     dispatch({ type: "COMPLETE_ITEM" });
   }, []);
 
-  const skipItem = useCallback((nextIndex: number, nextTarget: string) => {
+  const skipItem = useCallback((skippedIndex: number, nextIndex: number, nextTarget: string) => {
+    dispatch({ type: "ADD_SKIPPED", index: skippedIndex });
     dispatch({ type: "LOAD_ITEM", index: nextIndex, target: nextTarget });
+  }, []);
+
+  const addSkipped = useCallback((index: number) => {
+    dispatch({ type: "ADD_SKIPPED", index });
+  }, []);
+
+  const clearSkipped = useCallback(() => {
+    dispatch({ type: "CLEAR_SKIPPED" });
+  }, []);
+
+  const removeSkipped = useCallback((index: number) => {
+    dispatch({ type: "REMOVE_SKIPPED", index });
   }, []);
 
   const switchMode = useCallback(
@@ -212,6 +243,9 @@ export function useGameState() {
     loadItem,
     completeItem,
     skipItem,
+    addSkipped,
+    clearSkipped,
+    removeSkipped,
     switchMode,
     restoreIndices,
     setCategory,

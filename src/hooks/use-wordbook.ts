@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export interface WordBookEntry {
   en: string;
@@ -29,6 +29,10 @@ function saveWordbook(entries: WordBookEntry[]): void {
 
 export function useWordbook() {
   const [entries, setEntries] = useState<WordBookEntry[]>([]);
+
+  useEffect(() => {
+    setEntries(loadWordbook());
+  }, []);
 
   const addEntry = useCallback((entry: WordBookEntry) => {
     setEntries((prev) => {
