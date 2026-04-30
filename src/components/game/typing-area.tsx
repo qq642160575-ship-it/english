@@ -42,9 +42,9 @@ export function TypingArea({ target, input, isComplete, showHint, revealedLetter
         </span>
       )}
       {sentenceEmojis.length > 0 && !isComplete && (
-        <div className="flex items-center justify-center gap-2 mb-4 text-2xl leading-none cursor-pointer transition-transform hover:scale-110 active:scale-95" onClick={onEmojiClick}>
+        <div className="flex items-center justify-center gap-1.5 mb-4 leading-none cursor-pointer transition-transform hover:scale-105 active:scale-95" onClick={onEmojiClick}>
           {sentenceEmojis.map((emoji, i) => (
-            <span key={i} role="img" aria-hidden="true">{emoji}</span>
+            <span key={i} className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-zinc-100/50 dark:bg-zinc-800/30 text-lg" role="img" aria-hidden="true">{emoji}</span>
           ))}
         </div>
       )}

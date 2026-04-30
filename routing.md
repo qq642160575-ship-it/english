@@ -1,44 +1,29 @@
-# Agent Routing — 完成
+# Agent Routing — Phase 2
 
-## 状态: ✅ completed
+## 当前阶段: direct_fix → ux_ui → full_cycle
 
 ---
 
-### 执行序列（全部完成）
+### 执行序列
 
 ```
-Phase 1: direct_fix  ✅
-  └── fix_002: 完成反馈时间 1500ms → 2500ms
+Phase 1: direct_fix  (Orchestrator 直接修复)
+  ├── fix_003: TTS debounce — 消除每字母发音轰炸
+  └── fix_004: "恢复默认词库"增加确认弹窗 — 防止误触数据丢失
 
-Phase 2: feature  ✅
-  └── feat_001: 移除强制退格修正，允许有错的单词完成
-      ├── page.tsx: onChar 移除 allCorrect 门禁
-      ├── typing-area.tsx: 完成后保留错误字母红色+下方正确提示
-      ├── typing-area.tsx: 完成覆盖层差异化（完美→大✓ / 有错→"已打完"）
-      └── page.tsx: completedWordFeedback 差异化（绿色=完美 / 琥珀=有错）
+Phase 2: ux → ui  (UX分析已完成 → 直接UI实施)
+  ├── uxui_005: 顶部栏信息密度优化 — 折叠不常用操作
+  ├── uxui_006: 听写模式切换增加过渡动画
+  ├── uxui_007: "提示"功能剩余次数透明化
+  └── uxui_008: 虚拟键盘按键语义改进
 
-Phase 3+4: ux → ui  ✅
-  ├── uxui_001: 打字入口引导
-  │   ├── 更醒目的白色毛玻璃提示条
-  │   └── 新增 ⌨ 快捷键指南（字母/⌫/Enter）
-  ├── uxui_002: 错误提示优化
-  │   ├── 卡片式提示（背景+边框+阴影），替代纯文字
-  │   └── 文案 "卡住了？" → "这个词有点难度，试试…"
-  ├── uxui_003: 新用户侧边栏简化
-  │   ├── 隐藏 SRS 复习（首次无完成记录）
-  │   ├── 隐藏今日目标
-  │   ├── 隐藏生词本
-  │   ├── 隐藏常错词
-  │   └── 隐藏连续打卡
-  └── uxui_004: 章节完成词云
-      ├── 所有词以标签形式展示
-      ├── 绿色=完美 / 琥珀色=有错
-      └── hover 显示详情
+Phase 3: full_cycle  (句子模式体验优化)
+  └── uxui_009: 句子模式 auto-advance delay 差异化 + 表情展示优化
 ```
 
-### 改动文件汇总
+### 改动文件
 
 | 文件 | 改动 |
 |------|------|
-| `src/app/page.tsx` | 完成反馈时长、onChar逻辑、完成反馈UI差异化、打字引导、错误提示、侧边栏isNewUser、章节词云 |
-| `src/components/game/typing-area.tsx` | 错误提示保持可见、hasErrors prop、完成覆盖层差异化 |
+| `src/app/page.tsx` | TTS debounce, 恢复确认弹窗, 顶部栏折叠, 听写动画, 提示文案, 句子delay |
+| `src/components/game/virtual-keyboard.tsx` | 按键语义改进 |

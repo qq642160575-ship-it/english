@@ -73,6 +73,7 @@ export default function Home() {
   const [isReviewMode, setIsReviewMode] = useState(false);
   const [reviewItems, setReviewItems] = useState<(WordItem | SentenceItem)[]>([]);
   const [showStats, setShowStats] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [backspaceFeedback, setBackspaceFeedback] = useState<string | null>(null);
   const [stuckGuidance, setStuckGuidance] = useState<string | null>(null);
   const [isSRSReview, setIsSRSReview] = useState(false);
@@ -87,6 +88,7 @@ export default function Home() {
   const [goalCelebration, setGoalCelebration] = useState(false);
   const [dictationToast, setDictationToast] = useState<string | null>(null);
   const [bookmarkBounce, setBookmarkBounce] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Detect daily goal completion and show celebration
   const prevAllDoneRef = useRef(dailyGoal.isAllDone);
@@ -140,6 +142,14 @@ export default function Home() {
   const recordGlobalErrorRef = useRef(globalErrors.recordError);
   recordGlobalErrorRef.current = globalErrors.recordError;
   const prevCompletedRef = useRef<number[]>([]);
+  const speakDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const speakDebounced = useCallback((text: string) => {
+    if (speakDebounceRef.current) clearTimeout(speakDebounceRef.current);
+    speakDebounceRef.current = setTimeout(() => {
+      speakRef.current(text);
+    }, 120);
+  }, []);
 
   // When "隐藏已学" is toggled ON, jump from current completed word to next uncompleted
   useEffect(() => {
@@ -337,10 +347,13 @@ export default function Home() {
       }
     };
 
+    // Sentences get longer auto-advance so users can read the full sentence
+    const isSentence = currentTarget.includes(" ");
+    const advanceDelay = isSentence ? AUTO_ADVANCE_DELAY * 1.6 : AUTO_ADVANCE_DELAY;
     const timer = setTimeout(() => {
       advanceTimerRef.current = null;
       advanceRef.current();
-    }, AUTO_ADVANCE_DELAY);
+    }, advanceDelay);
     advanceTimerRef.current = timer;
     return () => {
       clearTimeout(timer);
@@ -363,7 +376,7 @@ export default function Home() {
 
     if (thisCharCorrect) {
       handleCharInputRef.current(char);
-      if (soundEnabledRef.current && char !== " " && !isDictationModeRef.current) speakRef.current(prefix);
+      if (soundEnabledRef.current && char !== " " && !isDictationModeRef.current) speakDebounced(prefix);
       // Complete when ALL letters typed — even with errors
       // (errors are recorded and shown, but user isn't forced to backspace)
       if (newLen >= s.target.length) {
@@ -374,9 +387,8 @@ export default function Home() {
     }
 
     // --- Wrong character ---
-    // Show error character in red, DON'T complete — force user to backspace
     handleCharInputRef.current(char);
-    if (soundEnabledRef.current && !isDictationModeRef.current) speakRef.current(prefix);
+    if (soundEnabledRef.current && !isDictationModeRef.current) speakDebounced(prefix);
     setErrorFlash("shake");
     setTimeout(() => setErrorFlash("none"), 350);
 
@@ -895,44 +907,14 @@ export default function Home() {
                 <span>{state.skippedIndices.length}</span>
               </button>
             )}
-            {/* Learned words */}
-            {!isReviewMode && completedCount > 0 && (
-              <button
-                onClick={handleShowLearnedWords}
-                className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all active:scale-95"
-                title="查看已学单词"
-              >
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-                </svg>
-                <span>{completedCount}</span>
-              </button>
-            )}
-            <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
-
             {/* Sound */}
             <button onClick={handleSoundToggle} className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95">
               {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Hint (show/hide untyped letters) */}
-            <button onClick={() => setShowHint((p) => !p)} className={cn("p-1.5 rounded-md transition-all active:scale-95", showHint ? "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200" : "text-[var(--color-action-blue)]")} title={showHint ? "隐藏未输入字母 (Ctrl+Shift+V)" : "显示未输入字母 (Ctrl+Shift+V)"}>
-              {showHint ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            </button>
+            <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1 max-md:hidden" />
 
-            {/* Dictation mode toggle */}
-            <button onClick={handleDictationModeToggle} className={cn("p-1.5 rounded-md transition-all active:scale-95", isDictationMode ? "text-[var(--color-action-blue)]" : "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5")} title={isDictationMode ? "退出听写模式" : "听写模式：只看中文，默写英文"}>
-              <PenLine className="w-3.5 h-3.5" />
-            </button>
-
-            {/* Keyboard */}
-            <button onClick={() => setShowKeyboard((p) => !p)} className={cn("p-1.5 rounded-md transition-all active:scale-95", showKeyboard ? "text-[var(--color-action-blue)]" : "text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5")}>
-              <Keyboard className="w-3.5 h-3.5" />
-            </button>
-
-            <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
-
-            {/* Chapter nav */}
+            {/* Chapter nav (hide on very small screens) */}
             {chapters.length > 1 && (
               <>
                 <button
@@ -941,11 +923,11 @@ export default function Home() {
                     if (idx > 0) handleChapterChange(chapters[idx - 1].chapter);
                   }}
                   disabled={chapters.findIndex((c) => c.chapter === state.chapter) <= 0}
-                  className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95"
+                  className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95 max-md:hidden"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
-                <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 tabular-nums min-w-[28px] text-center">
+                <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 tabular-nums min-w-[28px] text-center max-md:hidden">
                   {chapters.findIndex((c) => c.chapter === state.chapter) + 1}/{chapters.length}
                 </span>
                 <button
@@ -954,11 +936,11 @@ export default function Home() {
                     if (idx < chapters.length - 1) handleChapterChange(chapters[idx + 1].chapter);
                   }}
                   disabled={chapters.findIndex((c) => c.chapter === state.chapter) >= chapters.length - 1}
-                  className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95"
+                  className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95 max-md:hidden"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-                <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
+                <div className="w-px h-3.5 bg-zinc-200 dark:bg-zinc-800 mx-1 max-md:hidden" />
               </>
             )}
 
@@ -981,14 +963,70 @@ export default function Home() {
               </button>
             )}
 
-            {/* Reset (compact, secondary) */}
-            <button
-              onClick={handleReset}
-              className="p-1.5 rounded-md text-zinc-300 hover:text-zinc-500 dark:hover:text-zinc-400 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95"
-              title="重置本章进度 (Esc)"
-            >
-              <RotateCcw className="w-3 h-3" />
-            </button>
+            {/* More tools toggle */}
+            <div className="relative">
+              <button
+                onClick={() => setShowToolsMenu((p) => !p)}
+                className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-zinc-900/5 dark:hover:bg-zinc-100/5 transition-all active:scale-95"
+                title="更多工具"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                </svg>
+              </button>
+              {showToolsMenu && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowToolsMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-40 min-w-[160px] bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200/50 dark:border-zinc-700/50 py-1 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+                    {/* Hint toggle */}
+                    <button
+                      onClick={() => { setShowHint((p) => !p); setShowToolsMenu(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      {showHint ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showHint ? "隐藏提示字母" : "显示提示字母"}
+                    </button>
+                    {/* Dictation mode */}
+                    <button
+                      onClick={() => { handleDictationModeToggle(); setShowToolsMenu(false); }}
+                      className={cn("w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors", isDictationMode ? "text-[var(--color-action-blue)]" : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800")}
+                    >
+                      <PenLine className="w-3.5 h-3.5" />
+                      听写模式 {isDictationMode ? "(开)" : "(关)"}
+                    </button>
+                    {/* Keyboard toggle */}
+                    <button
+                      onClick={() => { setShowKeyboard((p) => !p); setShowToolsMenu(false); }}
+                      className={cn("w-full flex items-center gap-2 px-3 py-2 text-xs transition-colors", showKeyboard ? "text-[var(--color-action-blue)]" : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800")}
+                    >
+                      <Keyboard className="w-3.5 h-3.5" />
+                      虚拟键盘 {showKeyboard ? "(开)" : "(关)"}
+                    </button>
+                    <div className="h-px bg-zinc-200 dark:bg-zinc-700 my-1" />
+                    {/* Learned words */}
+                    {completedCount > 0 && !isReviewMode && (
+                      <button
+                        onClick={() => { handleShowLearnedWords(); setShowToolsMenu(false); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        已学单词 ({completedCount})
+                      </button>
+                    )}
+                    {/* Reset */}
+                    <button
+                      onClick={() => { handleReset(); setShowToolsMenu(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-500 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Reset
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </nav>
 
@@ -1057,7 +1095,7 @@ export default function Home() {
 
         {/* Center Content */}
         {currentItem ? (
-          <div key={state.index} className="flex flex-col items-center justify-center w-full max-w-4xl px-8 select-none -mt-12 animate-in fade-in duration-300">
+          <div key={`${state.index}-${isDictationMode}`} className="flex flex-col items-center justify-center w-full max-w-4xl px-8 select-none -mt-12 animate-in fade-in duration-300">
             {/* Backspace correction feedback */}
             {backspaceFeedback && (
               <div className="mb-3 text-sm text-green-500 dark:text-green-400 font-semibold animate-in fade-in slide-in-from-top-2 duration-200">
@@ -1274,8 +1312,10 @@ export default function Home() {
                   <Lightbulb className="w-3.5 h-3.5" />
                   {state.revealedCount >= 2 ? (
                     <span className="text-zinc-400 dark:text-zinc-500">提示已用完</span>
+                  ) : state.revealedCount >= 1 ? (
+                    <>提示 <span className="text-zinc-500 dark:text-zinc-400">(剩 1 次)</span></>
                   ) : (
-                    <>提示 {Array(2 - state.revealedCount).fill("?").join("")}</>
+                    <>提示 <span className="text-zinc-500 dark:text-zinc-400">(剩 2 次)</span></>
                   )}
                 </AppleActionButton>
                 <AppleActionButton onClick={handleSkip} variant="primary" disabled={false}>
@@ -1308,16 +1348,47 @@ export default function Home() {
                 导入词库
               </button>
               <button
-                onClick={() => {
-                  try { localStorage.removeItem(STORAGE_KEY); } catch {}
-                  const defaultPack = dataRegistry.getDefaultPackId(state.mode);
-                  const defaultChapter = dataRegistry.getDefaultChapter(defaultPack);
-                  handleCategoryChange(defaultPack);
-                }}
+                onClick={() => setShowResetConfirm(true)}
                 className="px-5 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-sm font-medium rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-95"
               >
                 恢复默认词库
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Reset default pack confirmation modal */}
+        {showResetConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm">
+            <div className="bg-white dark:bg-zinc-900 rounded-xl px-6 py-5 max-w-xs w-full mx-4 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 mb-4">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-1">恢复默认词库？</p>
+              <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-5 leading-relaxed">当前章节的学习进度将被清除，<br/>此操作不可撤销。</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  className="flex-1 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-sm font-medium rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-95"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => {
+                    setShowResetConfirm(false);
+                    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+                    const defaultPack = dataRegistry.getDefaultPackId(state.mode);
+                    const defaultChapter = dataRegistry.getDefaultChapter(defaultPack);
+                    handleCategoryChange(defaultPack);
+                  }}
+                  className="flex-1 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:brightness-110 transition-all active:scale-95"
+                >
+                  确认恢复
+                </button>
+              </div>
             </div>
           </div>
         )}

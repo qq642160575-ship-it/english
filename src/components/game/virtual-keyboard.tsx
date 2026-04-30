@@ -56,7 +56,7 @@ export const VirtualKeyboard = memo(function VirtualKeyboard({ activeKey, onKeyP
           ))}
           {ri === 2 && (
             <KeyboardKey
-              label="⌫"
+              label="← 退格"
               dataKey="backspace"
               isPressed={isPressed("backspace")}
               onClick={() => onKeyPress("backspace")}
